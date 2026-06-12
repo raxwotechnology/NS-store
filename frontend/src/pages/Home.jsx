@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { getCategories, getFeaturedProducts, getDeals } from '../services/api';
 import ProductCard from '../components/ProductCard';
 import useSettingsStore from '../store/settingsStore';
+import logoRound from '../assets/logo-round.jpg';
 
 const Home = () => {
   const [categories, setCategories] = useState([]);
@@ -104,7 +105,7 @@ const Home = () => {
           >
             <div className="relative">
               <div className="w-80 h-80 md:w-96 md:h-96 rounded-full bg-gradient-to-br from-rose-100 to-stone-200 flex items-center justify-center shadow-2xl overflow-hidden border-4 border-white">
-                <span className="text-8xl">💄</span>
+                <img src={logoRound} alt="NS Store" className="w-full h-full object-cover" />
               </div>
               {/* Floating badges */}
               {heroProducts[0] && (

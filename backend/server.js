@@ -16,6 +16,8 @@ app.use(express.urlencoded({ extended: true }));
 // Set CORS_ORIGINS in .env for custom domains (comma-separated)
 const envOrigins = (process.env.CORS_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean);
 const allowedOrigins = [
+  'https://ns-storee.netlify.app',
+  'https://www.ns-storee.netlify.app',
   'https://zagefashion.netlify.app',
   'https://www.zagefashion.netlify.app',
   'http://localhost:3000',
