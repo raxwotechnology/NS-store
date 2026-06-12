@@ -19,13 +19,16 @@ const buildOrderItems = (items) => items.map((item) => ({
   productId: item.productId,
   name: item.name,
   image: item.image,
+  courierId: item.courierId || undefined,
+  courierCharge: item.courierCharge || 0,
   quantity: item.quantity,
   price: item.price,
 }));
 
 const calculateTotal = (items, deliveryFee = 0, tax = 0) => {
   const itemsTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  return itemsTotal + (deliveryFee || 0) + (tax || 0);
+  const itemsCourier = items.reduce((s, it) => s + (Number(it.courierCharge || 0) * (Number(it.quantity || 1) || 1)), 0);
+  return itemsTotal + itemsCourier + (deliveryFee || 0) + (tax || 0);
 };
 
 // @desc    Create new order
@@ -293,10 +296,19 @@ const updateOrderStatus = async (req, res, next) => {
       order.orderStatus !== 'cancelled' &&
       order.isPosOrder !== true;
 
+    const previousStatus = order.orderStatus;
     order.orderStatus = nextOrderStatus;
     order.paymentStatus = nextPaymentStatus;
 
     const updated = await order.save();
+
+    // Update courier balance if needed
+    try {
+      const { handleOrderStatusChangeForCourier } = require('../utils/courierHelper');
+      await handleOrderStatusChangeForCourier(updated, previousStatus, updated.orderStatus);
+    } catch (courierErr) {
+      console.error('Failed to update courier balance on status change:', courierErr.message);
+    }
 
     // If a store owner cancels an order via /orders/:id/status, ensure stock is restored
     if (shouldRestoreStock) {
@@ -672,9 +684,14 @@ const getStoreOrders = async (req, res, next) => {
       res.status(404);
       return next(new Error('No store found for this user'));
     }
-    const { startDate, endDate, status } = req.query;
+    const { startDate, endDate, status, courierId, courierService } = req.query;
     const filter = { storeId: store._id };
     if (status) filter.orderStatus = status;
+    if (courierService) filter.courierService = courierService;
+    if (courierId) {
+      // filter orders that have at least one item with this courierId
+      filter['items.courierId'] = courierId;
+    }
     if (startDate || endDate) {
       filter.createdAt = {};
       if (startDate) filter.createdAt.$gte = new Date(startDate);
@@ -719,10 +736,19 @@ const cancelMyOrder = async (req, res, next) => {
       res.status(400);
       return next(new Error('Cancellation window (1 hour) has expired'));
     }
+    const previousStatus = order.orderStatus;
     order.orderStatus = 'cancelled';
     order.cancelledAt = new Date();
     order.cancellationReason = req.body.reason || 'Cancelled by customer';
     await order.save();
+
+    // Update courier balance if needed
+    try {
+      const { handleOrderStatusChangeForCourier } = require('../utils/courierHelper');
+      await handleOrderStatusChangeForCourier(order, previousStatus, order.orderStatus);
+    } catch (courierErr) {
+      console.error('Failed to update courier balance on cancellation:', courierErr.message);
+    }
     // Restore stock
     for (const item of order.items || []) {
       if (item?.productId && item?.quantity) {

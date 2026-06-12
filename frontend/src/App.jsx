@@ -42,6 +42,7 @@ import AdminFinancials from './pages/admin/AdminFinancials';
 import AdminInventory from './pages/admin/AdminInventory';
 import AdminPromotions from './pages/admin/AdminPromotions';
 import AdminProducts from './pages/admin/AdminProducts';
+import AdminCouriers from './pages/admin/AdminCouriers';
 import AdminPayroll from './pages/admin/AdminPayroll';
 import AdminEmployees from './pages/admin/AdminEmployees';
 import AdminReturns from './pages/admin/AdminReturns';
@@ -145,6 +146,7 @@ function App() {
           <Route path="/admin/stores" element={<ProtectedRoute roles={['admin']}><AdminStores /></ProtectedRoute>} />
           <Route path="/admin/categories" element={<ProtectedRoute roles={['admin']}><AdminCategories /></ProtectedRoute>} />
           <Route path="/admin/products" element={<ProtectedRoute roles={['admin']}><AdminProducts /></ProtectedRoute>} />
+          <Route path="/admin/couriers" element={<ProtectedRoute roles={['admin']}><AdminCouriers /></ProtectedRoute>} />
           <Route path="/admin/orders" element={<ProtectedRoute roles={['admin']}><AdminOrders /></ProtectedRoute>} />
           <Route path="/admin/returns" element={<ProtectedRoute roles={['admin']}><AdminReturns /></ProtectedRoute>} />
           <Route path="/admin/vouchers" element={<ProtectedRoute roles={['admin']}><AdminVouchers /></ProtectedRoute>} />

@@ -5,7 +5,7 @@ import axios from 'axios';
 // In development: falls back to empty string (uses Vite proxy)
 
 const API = axios.create({
-  baseURL: (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api',
+  baseURL: (import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')) + '/api',
   timeout: 30000, // 30s timeout (Render free tier cold starts can be slow)
   headers: {
     'Content-Type': 'application/json',
@@ -81,6 +81,7 @@ export const getStoreById = (id) => API.get(`/stores/${id}`);
 export const getMyStore = () => API.get('/stores/my');
 export const createStore = (data) => API.post('/stores', data);
 export const updateStore = (id, data) => API.put(`/stores/${id}`, data);
+export const deleteStore = (id) => API.delete(`/stores/${id}`);
 
 // Cart
 export const getCart = () => API.get('/cart');
@@ -209,6 +210,15 @@ export const getSettings = () => API.get('/settings');
 export const updateSettings = (data) => API.put('/settings', data);
 export const uploadLogo = (formData) => API.post('/settings/logo', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
+// Courier Services
+export const getCouriers = (params) => API.get('/couriers', { params });
+export const getCourierById = (id) => API.get(`/couriers/${id}`);
+export const getCourierPayments = (id) => API.get(`/couriers/${id}/payments`);
+export const addCourierPayment = (id, data) => API.post(`/couriers/${id}/payments`, data);
+export const createCourier = (data) => API.post('/couriers', data);
+export const updateCourier = (id, data) => API.put(`/couriers/${id}`, data);
+export const deleteCourier = (id) => API.delete(`/couriers/${id}`);
+
 // Expenses
 export const getExpenses = (params) => API.get('/expenses', { params });
 export const getExpenseSummary = (params) => API.get('/expenses/summary', { params });
@@ -281,5 +291,19 @@ export const rejectOvertimeRecord = (id) => API.put(`/overtime/${id}/reject`);
 export const deleteOvertimeRecord = (id) => API.delete(`/overtime/${id}`);
 export const getEmployeeOTReport = (employeeId, params) => API.get(`/overtime/employee/${employeeId}`, { params });
 export const getMyOvertime = (params) => API.get('/overtime/my', { params });
+
+// Enhancements additions
+export const importProductsExcel = (formData) => API.post('/products/import-excel', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const updateUserPermissions = (id, data) => API.put(`/admin/users/${id}/permissions`, data);
+export const createAdminUser = (data) => API.post('/admin/users', data);
+export const uploadProfilePhoto = (formData) => API.post('/auth/profile/photo', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const uploadEmployeeAgreement = (id, formData) => API.post(`/hr/employees/${id}/agreement`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const createInventoryTransfer = (data) => API.post('/stock/transfers', data);
+export const getInventoryTransfers = (params) => API.get('/stock/transfers', { params });
+export const completeInventoryTransfer = (id) => API.put(`/stock/transfers/${id}/complete`);
+export const cancelInventoryTransfer = (id) => API.put(`/stock/transfers/${id}/cancel`);
+export const getProfitReport = (params) => API.get('/finance/profit-report', { params });
+export const getPosAgents = () => API.get('/pos/agents');
+export const getPosCustomers = (params) => API.get('/pos/customers', { params });
 
 export default API;

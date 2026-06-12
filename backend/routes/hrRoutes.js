@@ -7,9 +7,29 @@ const {
   startBreak, endBreak, getBreakHistory, getActiveBreak,
   createTarget, getTargets, getMyTargets, updateTargetProgress, payTargetBonus,
   getEmployeePerformance,
-  adminMarkAttendance, adminCreateLeave, deleteTarget
+  adminMarkAttendance, adminCreateLeave, deleteTarget,
+  uploadEmployeeAgreement
 } = require('../controllers/hrController');
 const { protect, authorize } = require('../middleware/authMiddleware');
+
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = path.join(__dirname, '..', 'uploads', 'agreements');
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    cb(null, `${req.params.id}-${Date.now()}${path.extname(file.originalname)}`);
+  }
+});
+
+const upload = multer({ storage: storage });
 
 router.use(protect);
 
@@ -32,6 +52,7 @@ router.post('/leaves/create-for-employee', authorize('manager', 'admin'), adminC
 router.get('/employees', authorize('manager', 'admin'), getEmployees);
 router.post('/employees', authorize('manager', 'admin'), addEmployee);
 router.put('/employees/:id', authorize('manager', 'admin'), updateEmployee);
+router.post('/employees/:id/agreement', authorize('manager', 'admin'), upload.single('agreement'), uploadEmployeeAgreement);
 
 // Breaks
 router.post('/breaks/start', authorize('cashier', 'deliveryGuy', 'stockEmployee', 'manager'), startBreak);

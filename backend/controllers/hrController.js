@@ -870,6 +870,38 @@ const adminCreateLeave = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+// @desc    Upload employee agreement
+// @route   POST /api/hr/employees/:id/agreement
+// @access  Private/Manager/Admin
+const uploadEmployeeAgreement = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      res.status(400);
+      return next(new Error('Please upload an agreement file (PDF/Image)'));
+    }
+
+    const employee = await User.findById(req.params.id);
+    if (!employee) {
+      res.status(404);
+      return next(new Error('Employee not found'));
+    }
+
+    const agreementUrl = `/uploads/agreements/${req.file.filename}`;
+    if (!employee.employeeInfo) {
+      employee.employeeInfo = {};
+    }
+    employee.employeeInfo.agreementUrl = agreementUrl;
+    await employee.save();
+
+    res.json({
+      message: 'Agreement uploaded successfully',
+      agreementUrl,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   checkIn, checkOut, getMyAttendance, getAttendanceReport,
   requestLeave, getMyLeaves, getStoreLeaves, approveLeave, rejectLeave,
@@ -877,5 +909,6 @@ module.exports = {
   startBreak, endBreak, getBreakHistory, getActiveBreak,
   createTarget, getTargets, getMyTargets, updateTargetProgress, payTargetBonus,
   getEmployeePerformance,
-  adminMarkAttendance, adminCreateLeave, deleteTarget
+  adminMarkAttendance, adminCreateLeave, deleteTarget,
+  uploadEmployeeAgreement,
 };

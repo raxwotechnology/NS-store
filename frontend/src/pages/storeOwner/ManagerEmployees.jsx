@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Users, Search, Edit3, Save, X, UserPlus, Clock, Calendar, CheckCircle } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
-import { getEmployees, addEmployee, updateEmployee, adminMarkAttendance, adminCreateLeave, getAttendanceReport, getStoreLeaves } from '../../services/api';
+import { getEmployees, addEmployee, updateEmployee, adminMarkAttendance, adminCreateLeave, getAttendanceReport, getStoreLeaves, uploadEmployeeAgreement } from '../../services/api';
 import { toast } from 'react-toastify';
 import { managerNavGroups as navItems } from './managerNavItems';
 import useAuthStore from '../../store/authStore';
@@ -30,6 +30,32 @@ const ManagerEmployees = ({ navItems = managerNavItems, title = 'Manager Dashboa
   const [showAddModal, setShowAddModal] = useState(false);
   const [newForm, setNewForm] = useState(emptyNewForm);
   const [adding, setAdding] = useState(false);
+
+  // Employee Agreement uploads & preview state
+  const [previewAgreementUrl, setPreviewAgreementUrl] = useState(null);
+  const [uploadingEmpId, setUploadingEmpId] = useState(null);
+
+  const getAgreementFullUrl = (url) => {
+    if (!url) return '';
+    const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+    return `${base}${url}`;
+  };
+
+  const handleUploadAgreement = async (id, file) => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('agreement', file);
+    setUploadingEmpId(id);
+    try {
+      await uploadEmployeeAgreement(id, formData);
+      toast.success('Agreement uploaded successfully');
+      fetchEmployees();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to upload agreement');
+    } finally {
+      setUploadingEmpId(null);
+    }
+  };
 
   useEffect(() => { fetchEmployees(); }, []);
 
@@ -214,6 +240,42 @@ const ManagerEmployees = ({ navItems = managerNavItems, title = 'Manager Dashboa
                   <span>📋 EPF: {emp.employeeInfo?.epfNo || '—'}</span>
                 </div>
               )}
+
+              {/* Employment Agreement section */}
+              <div className="mt-4 pt-3 border-t border-dashed border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-1.5 text-muted-text font-medium">
+                  📄 Employee Agreement:
+                  {emp.employeeInfo?.agreementUrl ? (
+                    <span className="text-emerald-600 font-semibold flex items-center gap-0.5">
+                      <CheckCircle size={12} className="inline" /> Active
+                    </span>
+                  ) : (
+                    <span className="text-amber-600 font-semibold">Not Uploaded</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  {emp.employeeInfo?.agreementUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewAgreementUrl(getAgreementFullUrl(emp.employeeInfo.agreementUrl))}
+                      className="text-indigo-600 hover:text-indigo-800 font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      👁️ View Document
+                    </button>
+                  )}
+                  <label className="cursor-pointer text-indigo-600 hover:text-indigo-800 font-bold transition-colors flex items-center gap-1">
+                    <span>{emp.employeeInfo?.agreementUrl ? '🔄 Re-upload' : '📤 Upload file'}</span>
+                    <input
+                      type="file"
+                      accept=".pdf,image/*"
+                      onChange={(e) => handleUploadAgreement(emp._id, e.target.files[0])}
+                      className="hidden"
+                      disabled={uploadingEmpId === emp._id}
+                    />
+                  </label>
+                  {uploadingEmpId === emp._id && <span className="text-gray-400 animate-pulse">Uploading...</span>}
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -321,6 +383,28 @@ const ManagerEmployees = ({ navItems = managerNavItems, title = 'Manager Dashboa
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Document Preview Overlay Modal */}
+      {previewAgreementUrl && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4" onClick={() => setPreviewAgreementUrl(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-4xl h-[85vh] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-card-border flex items-center justify-between bg-gray-50">
+              <h3 className="font-bold text-dark-navy text-sm flex items-center gap-1.5">
+                📄 Employment Agreement Document Preview
+              </h3>
+              <button onClick={() => setPreviewAgreementUrl(null)} className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-500 hover:text-dark-navy">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 bg-gray-100 p-4 flex items-center justify-center overflow-auto">
+              {previewAgreementUrl.toLowerCase().endsWith('.pdf') || previewAgreementUrl.includes('.pdf') ? (
+                <iframe src={previewAgreementUrl} className="w-full h-full rounded-xl border border-gray-200" title="Agreement Preview" />
+              ) : (
+                <img src={previewAgreementUrl} alt="Agreement Preview" className="max-w-full max-h-full object-contain rounded-xl shadow" />
+              )}
+            </div>
           </div>
         </div>
       )}

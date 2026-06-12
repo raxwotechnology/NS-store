@@ -6,7 +6,7 @@ const Store = require('../models/Store');
 // @access  Private/Admin/Manager
 const createExpense = async (req, res, next) => {
   try {
-    const { title, category, amount, date, status, notes, storeId, receipt } = req.body;
+    const { title, category, amount, date, status, notes, storeId, receipt, paymentMethod } = req.body;
 
     // If manager, auto-assign their store
     let assignedStore = storeId;
@@ -21,6 +21,7 @@ const createExpense = async (req, res, next) => {
       amount,
       date: date || new Date(),
       status: status || 'Pending',
+      paymentMethod: paymentMethod || 'Cash',
       notes: notes || '',
       storeId: assignedStore || null,
       createdBy: req.user._id,
@@ -86,12 +87,13 @@ const updateExpense = async (req, res, next) => {
     const expense = await Expense.findById(req.params.id);
     if (!expense) { res.status(404); return next(new Error('Expense not found')); }
 
-    const { title, category, amount, date, status, notes, receipt } = req.body;
+    const { title, category, amount, date, status, notes, receipt, paymentMethod } = req.body;
     if (title !== undefined) expense.title = title;
     if (category !== undefined) expense.category = category;
     if (amount !== undefined) expense.amount = amount;
     if (date !== undefined) expense.date = date;
     if (status !== undefined) expense.status = status;
+    if (paymentMethod !== undefined) expense.paymentMethod = paymentMethod;
     if (notes !== undefined) expense.notes = notes;
     if (receipt !== undefined) expense.receipt = receipt;
 

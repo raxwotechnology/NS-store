@@ -59,9 +59,23 @@ const getProducts = async (req, res, next) => {
       .sort(sort)
       .skip(skip)
       .limit(limit);
+    // Convert relative image paths to absolute URLs
+    const hostPrefix = `${req.protocol}://${req.get('host')}`;
+    const normalizeProduct = (p) => {
+      const obj = p.toObject ? p.toObject() : p;
+      if (Array.isArray(obj.images)) {
+        obj.images = obj.images.map((img) => {
+          if (!img) return '';
+          if (/^https?:\/\//i.test(img)) return img;
+          if (img.startsWith('/')) return `${hostPrefix}${img}`;
+          return `${hostPrefix}/${img}`;
+        });
+      }
+      return obj;
+    };
 
     res.json({
-      products,
+      products: products.map(normalizeProduct),
       page,
       pages: Math.ceil(total / limit),
       total,
@@ -91,8 +105,21 @@ const searchProducts = async (req, res, next) => {
       .populate('categoryId', 'name slug')
       .populate('storeId', 'name slug logo')
       .limit(20);
+    const hostPrefix = `${req.protocol}://${req.get('host')}`;
+    const normalizeProduct = (p) => {
+      const obj = p.toObject ? p.toObject() : p;
+      if (Array.isArray(obj.images)) {
+        obj.images = obj.images.map((img) => {
+          if (!img) return '';
+          if (/^https?:\/\//i.test(img)) return img;
+          if (img.startsWith('/')) return `${hostPrefix}${img}`;
+          return `${hostPrefix}/${img}`;
+        });
+      }
+      return obj;
+    };
 
-    res.json({ products });
+    res.json({ products: products.map(normalizeProduct) });
   } catch (error) {
     next(error);
   }
@@ -107,7 +134,20 @@ const getFeaturedProducts = async (req, res, next) => {
       .populate('categoryId', 'name slug')
       .populate('storeId', 'name slug logo')
       .limit(12);
-    res.json(products);
+    const hostPrefix = `${req.protocol}://${req.get('host')}`;
+    const normalizeProduct = (p) => {
+      const obj = p.toObject ? p.toObject() : p;
+      if (Array.isArray(obj.images)) {
+        obj.images = obj.images.map((img) => {
+          if (!img) return '';
+          if (/^https?:\/\//i.test(img)) return img;
+          if (img.startsWith('/')) return `${hostPrefix}${img}`;
+          return `${hostPrefix}/${img}`;
+        });
+      }
+      return obj;
+    };
+    res.json(products.map(normalizeProduct));
   } catch (error) {
     next(error);
   }
@@ -123,7 +163,20 @@ const getDeals = async (req, res, next) => {
       .populate('storeId', 'name slug logo')
       .sort({ discount: -1 })
       .limit(12);
-    res.json(products);
+    const hostPrefix = `${req.protocol}://${req.get('host')}`;
+    const normalizeProduct = (p) => {
+      const obj = p.toObject ? p.toObject() : p;
+      if (Array.isArray(obj.images)) {
+        obj.images = obj.images.map((img) => {
+          if (!img) return '';
+          if (/^https?:\/\//i.test(img)) return img;
+          if (img.startsWith('/')) return `${hostPrefix}${img}`;
+          return `${hostPrefix}/${img}`;
+        });
+      }
+      return obj;
+    };
+    res.json(products.map(normalizeProduct));
   } catch (error) {
     next(error);
   }
@@ -139,7 +192,17 @@ const getProductById = async (req, res, next) => {
       .populate('storeId', 'name slug logo city phone email');
 
     if (product) {
-      res.json(product);
+      const hostPrefix = `${req.protocol}://${req.get('host')}`;
+      const obj = product.toObject ? product.toObject() : product;
+      if (Array.isArray(obj.images)) {
+        obj.images = obj.images.map((img) => {
+          if (!img) return '';
+          if (/^https?:\/\//i.test(img)) return img;
+          if (img.startsWith('/')) return `${hostPrefix}${img}`;
+          return `${hostPrefix}/${img}`;
+        });
+      }
+      res.json(obj);
     } else {
       res.status(404);
       next(new Error('Product not found'));
@@ -158,6 +221,7 @@ const createProduct = async (req, res, next) => {
       name,
       categoryId,
       subCategory,
+      brand,
       description,
       price,
       mrp,
@@ -173,6 +237,11 @@ const createProduct = async (req, res, next) => {
       purchasePrice,
     } = req.body;
 
+    if (!req.body.storeId) {
+      res.status(400);
+      return next(new Error('Store ID is required')); 
+    }
+
     const slug = name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
 
     const product = await Product.create({
@@ -181,6 +250,7 @@ const createProduct = async (req, res, next) => {
       slug,
       categoryId,
       subCategory,
+      brand,
       description,
       price,
       mrp,
@@ -201,7 +271,18 @@ const createProduct = async (req, res, next) => {
       stockType: 'new',
     });
 
-    res.status(201).json(product);
+    // Return product with absolute image URLs
+    const hostPrefix = `${req.protocol}://${req.get('host')}`;
+    const obj = product.toObject ? product.toObject() : product;
+    if (Array.isArray(obj.images)) {
+      obj.images = obj.images.map((img) => {
+        if (!img) return '';
+        if (/^https?:\/\//i.test(img)) return img;
+        if (img.startsWith('/')) return `${hostPrefix}${img}`;
+        return `${hostPrefix}/${img}`;
+      });
+    }
+    res.status(201).json(obj);
   } catch (error) {
     next(error);
   }
@@ -219,7 +300,7 @@ const updateProduct = async (req, res, next) => {
     }
 
     const fields = [
-      'name', 'categoryId', 'subCategory', 'description', 'price',
+      'name', 'categoryId', 'subCategory', 'brand', 'description', 'price',
       'mrp', 'discount', 'unit', 'variants', 'stock', 'images',
       'isFeatured', 'isOnSale', 'status', 'allowKokoOnline', 'allowKokoPos',
       'stockType', 'oldStock', 'newStock', 'costPrice',
@@ -268,7 +349,17 @@ const updateProduct = async (req, res, next) => {
     }
 
     const updated = await product.save();
-    res.json(updated);
+    const hostPrefix = `${req.protocol}://${req.get('host')}`;
+    const obj = updated.toObject ? updated.toObject() : updated;
+    if (Array.isArray(obj.images)) {
+      obj.images = obj.images.map((img) => {
+        if (!img) return '';
+        if (/^https?:\/\//i.test(img)) return img;
+        if (img.startsWith('/')) return `${hostPrefix}/${img}`;
+        return `${hostPrefix}/${img}`;
+      });
+    }
+    res.json(obj);
   } catch (error) {
     next(error);
   }
@@ -302,9 +393,23 @@ const getMyProducts = async (req, res, next) => {
       res.status(404);
       return next(new Error('No store found for this user'));
     }
-    const products = await Product.find({ storeId: store._id })
+    let products = await Product.find({ storeId: store._id })
       .populate('categoryId', 'name slug')
       .sort({ createdAt: -1 });
+    const hostPrefix = `${req.protocol}://${req.get('host')}`;
+    const normalizeProduct = (p) => {
+      const obj = p.toObject ? p.toObject() : p;
+      if (Array.isArray(obj.images)) {
+        obj.images = obj.images.map((img) => {
+          if (!img) return '';
+          if (/^https?:\/\//i.test(img)) return img;
+          if (img.startsWith('/')) return `${hostPrefix}${img}`;
+          return `${hostPrefix}/${img}`;
+        });
+      }
+      return obj;
+    };
+    products = products.map(normalizeProduct);
     res.json({ products, store });
   } catch (error) {
     next(error);
@@ -324,6 +429,136 @@ const getPriceHistory = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+// @desc    Import products from Excel sheet
+// @route   POST /api/products/import-excel
+// @access  Private/Manager/Admin
+const importProductsExcel = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      res.status(400);
+      return next(new Error('Please upload an Excel file'));
+    }
+
+    const Store = require('../models/Store');
+    let storeId = req.body.storeId;
+    if (!storeId && req.user.role === 'manager') {
+      const store = await Store.findOne({ managerId: req.user._id });
+      if (store) storeId = store._id;
+    }
+    if (!storeId && req.user.role === 'admin') {
+      // Default to the first store if admin didn't specify one
+      const store = await Store.findOne({ isActive: true });
+      if (store) storeId = store._id;
+    }
+
+    if (!storeId) {
+      res.status(400);
+      return next(new Error('Store ID is required for product import'));
+    }
+
+    const Category = require('../models/Category');
+    const exceljs = require('exceljs');
+    const workbook = new exceljs.Workbook();
+    
+    // Check if buffer or path is available
+    if (req.file.buffer) {
+      await workbook.xlsx.load(req.file.buffer);
+    } else {
+      await workbook.xlsx.readFile(req.file.path);
+    }
+
+    const worksheet = workbook.worksheets[0];
+    if (!worksheet) {
+      res.status(400);
+      return next(new Error('Empty Excel file'));
+    }
+
+    let count = 0;
+    const errors = [];
+
+    // Loop through rows (skip header row 1)
+    for (let rowNumber = 2; rowNumber <= worksheet.rowCount; rowNumber++) {
+      const row = worksheet.getRow(rowNumber);
+      
+      // If row is empty, skip
+      if (!row.getCell(1).value) continue;
+
+      const name = String(row.getCell(1).value || '').trim();
+      const categoryName = String(row.getCell(2).value || '').trim();
+      const subCategory = String(row.getCell(3).value || '').trim();
+      const brand = String(row.getCell(4).value || '').trim();
+      const description = String(row.getCell(5).value || '').trim();
+      const price = Number(row.getCell(6).value || 0);
+      const mrp = Number(row.getCell(7).value || 0);
+      const costPrice = Number(row.getCell(8).value || 0);
+      const unit = String(row.getCell(9).value || 'pcs').trim();
+      const stock = Number(row.getCell(10).value || 0);
+      const barcode = row.getCell(11).value ? String(row.getCell(11).value).trim() : undefined;
+      const sku = row.getCell(12).value ? String(row.getCell(12).value).trim() : undefined;
+
+      if (!name || !categoryName || !description || !price || !mrp) {
+        errors.push(`Row ${rowNumber}: Name, Category, Description, Price, and MRP are required.`);
+        continue;
+      }
+
+      try {
+        // Resolve Category
+        let category = await Category.findOne({ name: { $regex: new RegExp(`^${categoryName}$`, 'i') } });
+        if (!category) {
+          const catSlug = categoryName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+          category = await Category.create({
+            name: categoryName,
+            slug: catSlug,
+            description: `Auto-generated category for ${categoryName}`,
+          });
+        }
+
+        const slug = name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+
+        await Product.create({
+          storeId,
+          name,
+          slug,
+          categoryId: category._id,
+          subCategory: subCategory || undefined,
+          brand: brand || undefined,
+          description,
+          price,
+          mrp,
+          discount: Math.round(((mrp - price) / mrp) * 100) || 0,
+          unit,
+          stock,
+          images: [],
+          isFeatured: false,
+          isOnSale: false,
+          allowKokoOnline: true,
+          allowKokoPos: true,
+          lastCost: costPrice,
+          avgCost: costPrice,
+          costPrice: costPrice,
+          newStock: stock,
+          oldStock: 0,
+          stockType: 'new',
+          barcode,
+          sku,
+        });
+
+        count++;
+      } catch (err) {
+        errors.push(`Row ${rowNumber}: ${err.message}`);
+      }
+    }
+
+    res.json({
+      message: `${count} products imported successfully`,
+      count,
+      errors: errors.length > 0 ? errors : undefined,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getProducts,
   searchProducts,
@@ -335,4 +570,5 @@ module.exports = {
   deleteProduct,
   getMyProducts,
   getPriceHistory,
+  importProductsExcel,
 };

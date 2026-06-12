@@ -225,6 +225,32 @@ const updateProfile = async (req, res) => {
   }
 };
 
+const uploadProfilePhoto = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      res.status(400);
+      return next(new Error('Please upload an image file'));
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.status(404);
+      return next(new Error('User not found'));
+    }
+
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    user.avatar = avatarUrl;
+    await user.save();
+
+    res.json({
+      message: 'Profile photo uploaded successfully',
+      avatarUrl,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerUser,
   requestRegistrationOtp,
@@ -232,4 +258,5 @@ module.exports = {
   authUser,
   getMe,
   updateProfile,
+  uploadProfilePhoto,
 };

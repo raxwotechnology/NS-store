@@ -176,9 +176,18 @@ const cancelOrder = async (req, res, next) => {
       });
     }
 
+    const previousStatus = order.orderStatus;
     order.orderStatus = 'cancelled';
     order.paymentStatus = order.paymentStatus === 'completed' ? 'refunded' : 'failed';
     const updated = await order.save();
+
+    // Update courier balance if needed
+    try {
+      const { handleOrderStatusChangeForCourier } = require('../utils/courierHelper');
+      await handleOrderStatusChangeForCourier(updated, previousStatus, updated.orderStatus);
+    } catch (courierErr) {
+      console.error('Failed to update courier balance on admin cancellation:', courierErr.message);
+    }
 
     // Notify customer
     await sendNotification({
@@ -226,6 +235,79 @@ const getStats = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+// @desc    Create a user (including Admins/Managers)
+// @route   POST /api/admin/users
+const createUser = async (req, res, next) => {
+  try {
+    const { name, email, password, role, phone, permissions } = req.body;
+    if (!name || !email || !password) {
+      res.status(400);
+      return next(new Error('Name, email, and password are required'));
+    }
+
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      res.status(400);
+      return next(new Error('User already exists'));
+    }
+
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role: role || 'customer',
+      phone: phone || '',
+      permissions: permissions || {
+        canAddProducts: true,
+        canDeleteProducts: true,
+        canEditPrices: true,
+        canManageInventory: true,
+        canViewFinancials: true,
+        canManageEmployees: true,
+      },
+    });
+
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      permissions: user.permissions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update user permissions
+// @route   PUT /api/admin/users/:id/permissions
+const updateUserPermissions = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      res.status(404);
+      return next(new Error('User not found'));
+    }
+
+    if (req.body.permissions) {
+      user.permissions = {
+        ...user.permissions,
+        ...req.body.permissions,
+      };
+    }
+    await user.save();
+    res.json({
+      _id: user._id,
+      name: user.name,
+      role: user.role,
+      permissions: user.permissions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getUsers,
   updateUserRole,
@@ -238,4 +320,6 @@ module.exports = {
   approveOrder,
   cancelOrder,
   getStats,
+  createUser,
+  updateUserPermissions,
 };

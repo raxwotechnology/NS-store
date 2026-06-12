@@ -61,10 +61,19 @@ const updateDeliveryStatus = async (req, res, next) => {
       return next(new Error(`Invalid status. Valid: ${validStatuses.join(', ')}`));
     }
 
+    const previousStatus = order.orderStatus;
     order.orderStatus = status;
     if (status === 'delivered') order.deliveredAt = new Date();
 
     const updated = await order.save();
+
+    // Update courier balance if needed
+    try {
+      const { handleOrderStatusChangeForCourier } = require('../utils/courierHelper');
+      await handleOrderStatusChangeForCourier(updated, previousStatus, updated.orderStatus);
+    } catch (courierErr) {
+      console.error('Failed to update courier balance on delivery status update:', courierErr.message);
+    }
 
     // Notify customer
     const customer = await User.findById(order.userId);
@@ -109,11 +118,20 @@ const markCodPaymentSuccessful = async (req, res, next) => {
       return next(new Error('Order must be delivered before payment can be confirmed'));
     }
 
+    const previousStatus = order.orderStatus;
     order.paymentStatus = 'completed';
     order.orderStatus = 'completed';
     order.completedAt = new Date();
 
     const updated = await order.save();
+
+    // Update courier balance if needed
+    try {
+      const { handleOrderStatusChangeForCourier } = require('../utils/courierHelper');
+      await handleOrderStatusChangeForCourier(updated, previousStatus, updated.orderStatus);
+    } catch (courierErr) {
+      console.error('Failed to update courier balance on COD payment success:', courierErr.message);
+    }
     res.json(updated);
   } catch (error) { next(error); }
 };

@@ -12,6 +12,8 @@ const {
   approveOrder,
   cancelOrder,
   getStats,
+  createUser,
+  updateUserPermissions,
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -22,8 +24,10 @@ router.get('/stats', getStats);
 
 // Users
 router.get('/users', getUsers);
+router.post('/users', createUser);
 router.put('/users/:id/role', updateUserRole);
 router.put('/users/:id/toggle-status', toggleUserStatus);
+router.put('/users/:id/permissions', updateUserPermissions);
 router.delete('/users/:id', deleteUser);
 
 // Stores
