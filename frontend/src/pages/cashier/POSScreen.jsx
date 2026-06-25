@@ -162,7 +162,8 @@ const POSScreen = () => {
           setStores(sorted);
           
           let activeStoreId = selectedStoreId;
-          if (!activeStoreId && sorted.length > 0) {
+          const isStoreValid = sorted.some(s => s._id === activeStoreId);
+          if ((!activeStoreId || !isStoreValid) && sorted.length > 0) {
             activeStoreId = sorted[0]._id;
             setSelectedStoreId(activeStoreId);
             localStorage.setItem('posStoreId', activeStoreId);
@@ -345,11 +346,15 @@ const POSScreen = () => {
     if (searchRef.current) searchRef.current.focus();
   }, []);
 
-  const loadProducts = async (search = '') => {
+  const loadProducts = async (search = '', storeId = null) => {
     try {
       setLoading(true);
       const params = {};
       if (search) params.search = search;
+      const targetStoreId = storeId || selectedStoreId;
+      if (targetStoreId) {
+        params.storeId = targetStoreId;
+      }
       const { data } = await getPosProducts(params);
       setProducts(data);
     } catch (err) {
