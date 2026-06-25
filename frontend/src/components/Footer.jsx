@@ -2,12 +2,13 @@ import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Globe, MessageCircle, Camera, Play } from 'lucide-react';
 import useSettingsStore from '../store/settingsStore';
 import useAuthStore from '../store/authStore';
+import logoImg from '../assets/logo.jpeg';
 
 const Footer = () => {
   const user = useAuthStore((s) => s.user);
   const settings = useSettingsStore((s) => s.settings);
-  const brandName = settings?.shopName || 'Zage Fashion Corner';
-  const footerText = settings?.footerText || `© ${new Date().getFullYear()} Zage Fashion Corner. All rights reserved.`;
+  const brandName = settings?.shopName || 'NS Store';
+  const footerText = settings?.footerText || `© ${new Date().getFullYear()} NS Store. All rights reserved.`;
   const brandEmail = settings?.email || 'support@zagebeauty.com';
   const brandPhone = settings?.phone || '+94 11 255 5000';
   const brandAddress = settings?.address || '88 Fashion Avenue, Colombo 03';
@@ -71,7 +72,17 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <Link to="/" className="text-2xl font-bold text-primary-green mb-4 inline-flex items-center gap-2">
-              {brandLogoUrl && <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded object-cover" />}
+              {brandLogoUrl && (
+                <img 
+                  src={brandLogoUrl} 
+                  alt={brandName} 
+                  className="w-8 h-8 rounded object-cover" 
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = logoImg;
+                  }}
+                />
+              )}
               <span>{brandName}</span>
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed mb-4">

@@ -4,8 +4,10 @@ import DashboardLayout from '../../components/DashboardLayout';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../../services/api';
 import { toast } from 'react-toastify';
 import { adminNavGroups as navItems } from './adminNavItems';
+import { useConfirmDelete } from '../../components/ConfirmDeleteModal';
 
 const AdminCategories = () => {
+  const confirmDelete = useConfirmDelete();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -59,7 +61,10 @@ const AdminCategories = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this category?')) return;
+    const category = categories.find(c => c._id === id);
+    const categoryName = category ? category.name : 'this category';
+    const confirmed = await confirmDelete(`Enter your administrator password to permanently delete the category "${categoryName}".`);
+    if (!confirmed) return;
     try {
       await deleteCategory(id);
       toast.success('Category deleted');

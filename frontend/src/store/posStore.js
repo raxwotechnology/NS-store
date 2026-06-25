@@ -16,6 +16,7 @@ const usePosStore = create((set, get) => ({
   printReceipt: true,
   loyaltyPointsToRedeem: 0,
   loyaltyDiscount: 0,
+  courierService: null,
 
   addItem: (product) => {
     const { cart } = get();
@@ -33,7 +34,7 @@ const usePosStore = create((set, get) => ({
     } else {
       if (product.stock <= 0) return;
       set({
-        cart: [
+          cart: [
           ...cart,
           {
             productId: product._id,
@@ -44,10 +45,21 @@ const usePosStore = create((set, get) => ({
             unit: product.unit,
             barcode: product.barcode || '',
             quantity: 1,
+            courierId: null,
+            courierCharge: 0,
           },
         ],
       });
     }
+  },
+
+  setItemCourier: (productId, courier) => {
+    set({ cart: get().cart.map((item) => item.productId === productId ? { ...item, courierId: courier?._id || courier?.id || null } : item) });
+  },
+
+  setItemCourierCharge: (productId, amount) => {
+    const num = parseFloat(amount) || 0;
+    set({ cart: get().cart.map((item) => item.productId === productId ? { ...item, courierCharge: num } : item) });
   },
 
   removeItem: (productId) => {
@@ -113,6 +125,14 @@ const usePosStore = create((set, get) => ({
     set({ loyaltyPointsToRedeem: 0, loyaltyDiscount: 0 });
   },
 
+  setCourierService: (courier) => {
+    set({ courierService: courier });
+  },
+
+  clearCourierService: () => {
+    set({ courierService: null });
+  },
+
   clearCart: () => {
     set({
       cart: [],
@@ -129,6 +149,7 @@ const usePosStore = create((set, get) => ({
       printReceipt: true,
       loyaltyPointsToRedeem: 0,
       loyaltyDiscount: 0,
+      courierService: null,
     });
   },
 
@@ -173,7 +194,9 @@ const usePosStore = create((set, get) => ({
     const subtotal = get().getSubtotal();
     const totalDiscount = get().getTotalDiscount();
     const tax = get().getTax();
-    return parseFloat(Math.max(0, subtotal - totalDiscount + tax).toFixed(2));
+    const perItemCharges = get().cart.reduce((s, it) => s + (Number(it.courierCharge || 0)), 0);
+    const orderCourierCharge = get().courierService?.charge || 0;
+    return parseFloat(Math.max(0, subtotal - totalDiscount + tax + perItemCharges + orderCourierCharge).toFixed(2));
   },
 
   getChange: () => {

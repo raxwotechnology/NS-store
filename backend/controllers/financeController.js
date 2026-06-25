@@ -142,7 +142,7 @@ const getFinancialDashboard = async (req, res, next) => {
 // @access  Private/Admin/Manager
 const addAdditionalIncome = async (req, res, next) => {
   try {
-    const { title, source, amount, date, notes, storeId } = req.body;
+    const { title, source, amount, date, notes, storeId, paymentMethod } = req.body;
 
     let assignedStore = storeId;
     if (!assignedStore && req.user.role === 'manager') {
@@ -155,6 +155,7 @@ const addAdditionalIncome = async (req, res, next) => {
       source,
       amount,
       date: date || new Date(),
+      paymentMethod: paymentMethod || 'Cash',
       notes: notes || '',
       storeId: assignedStore || null,
       createdBy: req.user._id,
@@ -219,7 +220,7 @@ const updateAdditionalIncome = async (req, res, next) => {
       }
     }
 
-    const fields = ['title', 'source', 'amount', 'date', 'notes'];
+    const fields = ['title', 'source', 'amount', 'date', 'notes', 'paymentMethod'];
     fields.forEach((f) => {
       if (req.body[f] !== undefined) income[f] = req.body[f];
     });
@@ -228,10 +229,99 @@ const updateAdditionalIncome = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+// @desc    Get profit report by Category and Brand
+// @route   GET /api/finance/profit-report
+// @access  Private/Admin/Manager
+const getProfitReport = async (req, res, next) => {
+  try {
+    const { startDate, endDate, storeId } = req.query;
+    const filter = { orderStatus: { $nin: ['cancelled'] } };
+
+    const Store = require('../models/Store');
+    if (req.user.role === 'manager') {
+      const store = await Store.findOne({ managerId: req.user._id });
+      if (store) filter.storeId = store._id;
+    } else if (storeId) {
+      filter.storeId = storeId;
+    }
+
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
+      if (endDate) filter.createdAt.$lte = new Date(endDate);
+    }
+
+    const orders = await Order.find(filter)
+      .populate({
+        path: 'items.productId',
+        populate: {
+          path: 'categoryId',
+          select: 'name'
+        }
+      });
+
+    const categoryReport = {};
+    const brandReport = {};
+
+    orders.forEach(order => {
+      order.items.forEach(item => {
+        const qty = Number(item.quantity || 0);
+        const revenue = Number(item.price || 0) * qty;
+        const cost = Number(item.unitCostAtSale || 0) * qty;
+        const profit = revenue - cost;
+
+        const product = item.productId;
+        const categoryName = product && product.categoryId ? product.categoryId.name : 'Uncategorized';
+        const brandName = product && product.brand ? product.brand : 'Generic';
+
+        // Group by Category
+        if (!categoryReport[categoryName]) {
+          categoryReport[categoryName] = { sales: 0, cost: 0, profit: 0, itemsSold: 0 };
+        }
+        categoryReport[categoryName].sales += revenue;
+        categoryReport[categoryName].cost += cost;
+        categoryReport[categoryName].profit += profit;
+        categoryReport[categoryName].itemsSold += qty;
+
+        // Group by Brand
+        if (!brandReport[brandName]) {
+          brandReport[brandName] = { sales: 0, cost: 0, profit: 0, itemsSold: 0 };
+        }
+        brandReport[brandName].sales += revenue;
+        brandReport[brandName].cost += cost;
+        brandReport[brandName].profit += profit;
+        brandReport[brandName].itemsSold += qty;
+      });
+    });
+
+    // Format into arrays
+    const categories = Object.entries(categoryReport).map(([name, data]) => ({
+      name,
+      sales: Math.round(data.sales * 100) / 100,
+      cost: Math.round(data.cost * 100) / 100,
+      profit: Math.round(data.profit * 100) / 100,
+      itemsSold: data.itemsSold
+    })).sort((a, b) => b.profit - a.profit);
+
+    const brands = Object.entries(brandReport).map(([name, data]) => ({
+      name,
+      sales: Math.round(data.sales * 100) / 100,
+      cost: Math.round(data.cost * 100) / 100,
+      profit: Math.round(data.profit * 100) / 100,
+      itemsSold: data.itemsSold
+    })).sort((a, b) => b.profit - a.profit);
+
+    res.json({ categories, brands });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getFinancialDashboard,
   addAdditionalIncome,
   getAdditionalIncomes,
   deleteAdditionalIncome,
   updateAdditionalIncome,
+  getProfitReport,
 };

@@ -526,10 +526,12 @@ body {
 /* Product Grid */
 .pos-product-grid {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 1rem 1.25rem;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-auto-rows: max-content;
   gap: 0.85rem;
   align-content: start;
 }
@@ -555,6 +557,8 @@ body {
   transition: all 0.2s;
   overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .pos-product-card:hover {
@@ -573,6 +577,7 @@ body {
   position: relative;
   width: 100%;
   height: 110px;
+  flex-shrink: 0;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.2);
 }
@@ -618,13 +623,17 @@ body {
 }
 
 .pos-product-name {
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
   margin-bottom: 0.25rem;
+  line-height: 1.2;
+  height: 2.4rem; /* Fixed height for 2 lines to align elements cleanly */
 }
 
 .pos-product-meta {
@@ -834,6 +843,41 @@ body {
   margin-top: 1px;
 }
 
+/* Courier inputs default layout */
+.pos-cart-item-courier-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-left: 12px;
+}
+
+.pos-cart-item-courier-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pos-cart-item-courier-select {
+  padding: 6px;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 6px;
+  outline: none;
+}
+
+.pos-cart-item-courier-input {
+  width: 110px;
+  padding: 6px;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 6px;
+  outline: none;
+}
+
 .pos-cart-item-controls {
   display: flex;
   align-items: center;
@@ -913,6 +957,9 @@ body {
   padding: 1rem 1.25rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 65vh;
 }
 
 .pos-total-row {
@@ -2038,19 +2085,69 @@ body {
     flex-direction: column;
   }
 
+  /* Mobile Tabs Header */
+  .pos-mobile-tabs {
+    display: flex;
+    background: rgba(15, 20, 25, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0.5rem;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .pos-mobile-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.7rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.02);
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .pos-mobile-tab-btn.active {
+    background: rgba(217, 70, 160, 0.12);
+    border-color: rgba(217, 70, 160, 0.4);
+    color: #d946a0;
+  }
+
+  /* Hide panels dynamically based on active tab on mobile */
+  .pos-products-panel.mobile-hidden,
+  .pos-cart-panel.mobile-hidden {
+    display: none !important;
+  }
+
   .pos-products-panel {
     flex: 1;
-    max-height: 50vh;
+    height: calc(100vh - 108px) !important;
+    max-height: calc(100vh - 108px) !important;
   }
 
   .pos-cart-panel {
     max-width: 100%;
     min-width: 100%;
     flex: 1;
+    height: calc(100vh - 108px) !important;
+    max-height: calc(100vh - 108px) !important;
+  }
+
+  .pos-cart-totals {
+    max-height: 42vh !important;
+  }
+
+  .pos-cart-items {
+    min-height: 180px;
   }
 
   .pos-product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
 
   .pos-login-container {
@@ -2069,5 +2166,68 @@ body {
 
   .pos-topbar-cashier-name {
     display: none;
+  }
+}
+
+/* ── Mobile Cart Row Card Stacking ── */
+@media (max-width: 600px) {
+  .pos-cart-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 0.75rem 1rem;
+  }
+
+  .pos-cart-item-info {
+    width: 100%;
+  }
+
+  .pos-cart-item-name {
+    white-space: normal !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 0.88rem;
+    line-height: 1.25;
+  }
+
+  .pos-cart-item-courier-section {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+
+  .pos-cart-item-courier-row {
+    width: 100%;
+  }
+
+  .pos-cart-item-courier-select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pos-cart-item-courier-input {
+    flex: 1;
+    width: auto !important;
+    min-width: 0;
+  }
+
+  .pos-cart-item-controls {
+    width: 100%;
+    justify-content: space-between;
+    border-top: 1px dashed rgba(255, 255, 255, 0.06);
+    padding-top: 8px;
+    margin-top: 2px;
+  }
+}
+
+/* ── Mobile Payment Methods Grid Wrapping ── */
+@media (max-width: 480px) {
+  .pos-payment-methods {
+    flex-wrap: wrap !important;
+  }
+
+  .pos-payment-btn {
+    flex: 1 0 calc(50% - 0.25rem) !important;
   }
 }

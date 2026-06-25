@@ -1,7 +1,7 @@
 import { useState, useEffect, Fragment } from 'react';
-import { CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle, XCircle, ChevronDown, ChevronUp, Truck } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
-import { getStoreOrders, updateOrderStatus, assignDeliveryGuy, getAvailableDeliveryGuys } from '../../services/api';
+import { getStoreOrders, updateOrderStatus, assignDeliveryGuy, getAvailableDeliveryGuys, getCouriers } from '../../services/api';
 import useCurrencyStore from '../../store/currencyStore';
 import { toast } from 'react-toastify';
 import { managerNavGroups as navItems } from './managerNavItems';
@@ -30,22 +30,21 @@ const StoreOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [courierFilter, setCourierFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [expandedId, setExpandedId] = useState(null);
   const [deliveryGuys, setDeliveryGuys] = useState([]);
+  const [couriers, setCouriers] = useState([]);
   const { convertPrice, formatPrice } = useCurrencyStore();
 
   const fetchOrders = async () => {
     try {
       const { data } = await getStoreOrders();
       setOrders(data);
-      if (data?.[0]?.storeId?._id) {
-        const { data: guys } = await getAvailableDeliveryGuys({ storeId: data[0].storeId._id });
-        setDeliveryGuys(guys || []);
-      } else {
-        const { data: guys } = await getAvailableDeliveryGuys();
-        setDeliveryGuys(guys || []);
-      }
+      const { data: guys } = await getAvailableDeliveryGuys(data?.[0]?.storeId?._id ? { storeId: data[0].storeId._id } : {});
+      setDeliveryGuys(guys || []);
+      const { data: courierList } = await getCouriers({ all: true });
+      setCouriers(courierList || []);
     } catch (err) {
       toast.error('Failed to load orders');
     } finally {
@@ -88,6 +87,10 @@ const StoreOrders = () => {
   };
 
   const filtered = (filter === 'all' ? orders : orders.filter((o) => o.orderStatus === filter))
+    .filter((order) => {
+      if (courierFilter === 'all') return true;
+      return order.items?.some((item) => String(item.courierId || '') === courierFilter);
+    })
     .sort((a, b) => {
       if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
       if (sortBy === 'amount_high') return (b.totalAmount || 0) - (a.totalAmount || 0);
@@ -155,6 +158,36 @@ const StoreOrders = () => {
               </button>
             );
           })}
+        </div>
+
+        {/* Courier Filter */}
+        <div className="mb-6 flex items-center gap-3">
+          <Truck size={16} className="text-muted-text" />
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            <button
+              onClick={() => setCourierFilter('all')}
+              className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                courierFilter === 'all'
+                  ? 'bg-indigo-100 text-indigo-700 border border-indigo-300'
+                  : 'bg-white border border-card-border text-muted-text hover:bg-gray-50'
+              }`}
+            >
+              All Couriers
+            </button>
+            {couriers.map((courier) => (
+              <button
+                key={courier._id}
+                onClick={() => setCourierFilter(courier._id)}
+                className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                  courierFilter === courier._id
+                    ? 'bg-indigo-100 text-indigo-700 border border-indigo-300'
+                    : 'bg-white border border-card-border text-muted-text hover:bg-gray-50'
+                }`}
+              >
+                {courier.name}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl border border-card-border shadow-sm overflow-hidden">
@@ -243,16 +276,36 @@ const StoreOrders = () => {
                     {expandedId === order._id && (
                       <tr>
                         <td colSpan={8} className="px-6 py-4 bg-gray-50">
-                          <div className="space-y-2 text-sm">
+                          <div className="space-y-4 text-sm">
                             <p><strong>Assigned Delivery:</strong> {order.deliveryGuyId?.name || 'Not assigned'}</p>
                             <p><strong>Delivery Address:</strong> {order.deliveryAddress ? `${order.deliveryAddress.street}, ${order.deliveryAddress.city}, ${order.deliveryAddress.state} ${order.deliveryAddress.zipCode}` : 'N/A'}</p>
                             <div>
-                              <strong>Items:</strong>
-                              <ul className="list-disc pl-6">
-                                {order.items?.map((item, i) => (
-                                  <li key={i}>{item.name} x {item.quantity} - Rs. {(item.price * item.quantity).toFixed(2)}</li>
-                                ))}
-                              </ul>
+                              <strong className="block mb-2">Order Items:</strong>
+                              <div className="space-y-3 bg-white rounded-xl p-4">
+                                {order.items?.map((item, i) => {
+                                  const courierName = couriers.find(c => String(c._id) === String(item.courierId))?.name || 'No courier assigned';
+                                  return (
+                                    <div key={i} className="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
+                                      <div className="flex items-start justify-between mb-2">
+                                        <div>
+                                          <p className="font-medium text-dark-navy">{item.name}</p>
+                                          <p className="text-xs text-muted-text">Qty: {item.quantity} × Rs. {(item.price || 0).toLocaleString()}</p>
+                                        </div>
+                                        <p className="font-semibold text-dark-navy">Rs. {((item.price || 0) * item.quantity).toLocaleString()}</p>
+                                      </div>
+                                      <div className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-1 text-indigo-600">
+                                          <Truck size={14} />
+                                          <span>{courierName}</span>
+                                        </div>
+                                        {item.courierCharge && (
+                                          <p className="text-muted-text">Courier: Rs. {(item.courierCharge || 0).toLocaleString()}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
                         </td>

@@ -42,6 +42,7 @@ import AdminFinancials from './pages/admin/AdminFinancials';
 import AdminInventory from './pages/admin/AdminInventory';
 import AdminPromotions from './pages/admin/AdminPromotions';
 import AdminProducts from './pages/admin/AdminProducts';
+import AdminCouriers from './pages/admin/AdminCouriers';
 import AdminPayroll from './pages/admin/AdminPayroll';
 import AdminEmployees from './pages/admin/AdminEmployees';
 import AdminReturns from './pages/admin/AdminReturns';
@@ -68,6 +69,7 @@ import CashierStock from './pages/employee/CashierStock';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import useSettingsStore from './store/settingsStore';
+import { ConfirmDeleteProvider } from './components/ConfirmDeleteModal';
 
 const AppLayout = ({ children }) => {
   const location = useLocation();
@@ -101,9 +103,11 @@ const AppLayout = ({ children }) => {
 
 function App() {
   return (
-    <Router>
-      <AppLayout>
-        <Routes>
+    <ConfirmDeleteProvider>
+      <Router>
+        <AppLayout>
+          <Routes>
+
           {/* Public */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -145,6 +149,7 @@ function App() {
           <Route path="/admin/stores" element={<ProtectedRoute roles={['admin']}><AdminStores /></ProtectedRoute>} />
           <Route path="/admin/categories" element={<ProtectedRoute roles={['admin']}><AdminCategories /></ProtectedRoute>} />
           <Route path="/admin/products" element={<ProtectedRoute roles={['admin']}><AdminProducts /></ProtectedRoute>} />
+          <Route path="/admin/couriers" element={<ProtectedRoute roles={['admin']}><AdminCouriers /></ProtectedRoute>} />
           <Route path="/admin/orders" element={<ProtectedRoute roles={['admin']}><AdminOrders /></ProtectedRoute>} />
           <Route path="/admin/returns" element={<ProtectedRoute roles={['admin']}><AdminReturns /></ProtectedRoute>} />
           <Route path="/admin/vouchers" element={<ProtectedRoute roles={['admin']}><AdminVouchers /></ProtectedRoute>} />
@@ -185,6 +190,7 @@ function App() {
       </AppLayout>
       <ToastContainer position="top-right" autoClose={3000} theme="colored" />
     </Router>
+  </ConfirmDeleteProvider>
   );
 }
 

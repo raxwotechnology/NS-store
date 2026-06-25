@@ -5,6 +5,7 @@ import { loginUser } from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import useSettingsStore from '../../store/settingsStore';
 import { toast } from 'react-toastify';
+import logoImg from '../../assets/logo.jpeg';
 
 const CashierLogin = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +16,7 @@ const CashierLogin = () => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
   const settings = useSettingsStore((s) => s.settings);
-  const brandName = settings?.shopName || 'Zage Fashion Corner';
+  const brandName = settings?.shopName || 'NS Store';
   const brandLogoUrl = settings?.logoUrl;
 
   const handleSubmit = async (e) => {
@@ -50,7 +51,19 @@ const CashierLogin = () => {
         <div className="pos-login-branding">
           <div className="pos-login-brand-content">
             <div className="pos-login-logo">
-              {brandLogoUrl ? <img src={brandLogoUrl} alt={brandName} className="w-12 h-12 rounded-xl object-cover" /> : <ShoppingCart size={40} />}
+              {brandLogoUrl ? (
+                <img 
+                  src={brandLogoUrl} 
+                  alt={brandName} 
+                  className="w-12 h-12 rounded-xl object-cover" 
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = logoImg;
+                  }}
+                />
+              ) : (
+                <ShoppingCart size={40} />
+              )}
             </div>
             <h1>{brandName}</h1>
             <p className="pos-login-tagline">Fashion & Beauty POS</p>

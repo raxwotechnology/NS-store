@@ -252,8 +252,8 @@ const Checkout = () => {
   };
 
   const initiatePayHere = (payData, order) => {
-    const FRONTEND = 'https://beauty.zage.lk';
-    const BACKEND = 'https://zagebeauty.zage.lk';
+    const FRONTEND = window.location.origin;
+    const BACKEND = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '');
     const payment = {
       sandbox: payData.sandbox,
       merchant_id: payData.merchant_id,

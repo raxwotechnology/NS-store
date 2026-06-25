@@ -7,6 +7,7 @@ import useCurrencyStore from '../store/currencyStore';
 import { searchProducts } from '../services/api';
 import NotificationBell from './NotificationBell';
 import useSettingsStore from '../store/settingsStore';
+import logoImg from '../assets/logo.jpeg';
 
 const buildFeatureIndex = (role) => {
   const items = [
@@ -60,7 +61,7 @@ const Navbar = () => {
   const fetchCart = useCartStore((s) => s.fetchCart);
   const { currency, toggleCurrency, fetchRate, getProductPrice } = useCurrencyStore();
   const settings = useSettingsStore((s) => s.settings);
-  const brandName = settings?.shopName || 'Zage Fashion Corner';
+  const brandName = settings?.shopName || 'NS Store';
   const brandLogoUrl = settings?.logoUrl;
   const brandPhone = settings?.phone || '+94 11 255 5000';
   const freeDeliveryThreshold = Number(settings?.deliveryFeeThreshold || 5000).toLocaleString();
@@ -206,7 +207,17 @@ const Navbar = () => {
       <div className="base-container py-3 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link to="/" className="text-2xl font-bold text-primary-green flex-shrink-0 flex items-center gap-2">
-          {brandLogoUrl && <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded object-cover" />}
+          {brandLogoUrl && (
+            <img 
+              src={brandLogoUrl} 
+              alt={brandName} 
+              className="w-8 h-8 rounded object-cover" 
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = logoImg;
+              }}
+            />
+          )}
           <span>{brandName}</span>
         </Link>
 

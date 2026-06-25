@@ -225,6 +225,53 @@ const updateProfile = async (req, res) => {
   }
 };
 
+const uploadProfilePhoto = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      res.status(400);
+      return next(new Error('Please upload an image file'));
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.status(404);
+      return next(new Error('User not found'));
+    }
+
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    user.avatar = avatarUrl;
+    await user.save();
+
+    res.json({
+      message: 'Profile photo uploaded successfully',
+      avatarUrl,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const verifyPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password) {
+      return fail(res, 400, 'Password is required');
+    }
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return fail(res, 404, 'User not found');
+    }
+    const isMatch = await user.matchPassword(password);
+    if (isMatch) {
+      res.json({ success: true, message: 'Password verified' });
+    } else {
+      return fail(res, 401, 'Invalid password');
+    }
+  } catch (error) {
+    return fail(res, 500, error.message || 'Verification failed');
+  }
+};
+
 module.exports = {
   registerUser,
   requestRegistrationOtp,
@@ -232,4 +279,7 @@ module.exports = {
   authUser,
   getMe,
   updateProfile,
+  uploadProfilePhoto,
+  verifyPassword,
 };
+

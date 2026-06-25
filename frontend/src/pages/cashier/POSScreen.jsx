@@ -23,8 +23,30 @@ import {
   User,
   Phone,
   Smartphone,
+  Truck,
 } from 'lucide-react';
-import { getPosProducts, getProductByBarcode, posCheckout, getPosOrders, applyVoucher, getSettings, getActivePosSession, startPosSession, endPosSession, getPosPayHereHash, redeemPoints, getMyLoyaltyPoints, getCreditOrders, settleCreditOrder } from '../../services/api';
+import {
+  getPosProducts,
+  getProductByBarcode,
+  posCheckout,
+  getPosOrders,
+  applyVoucher,
+  getSettings,
+  getActivePosSession,
+  startPosSession,
+  endPosSession,
+  getPosPayHereHash,
+  redeemPoints,
+  getMyLoyaltyPoints,
+  getCreditOrders,
+  settleCreditOrder,
+  getPosAgents,
+  getPosCustomers,
+  getCouriers,
+  getAdminStores,
+  getStores,
+  setStoreIdHeader
+} from '../../services/api';
 import usePosStore from '../../store/posStore';
 import useAuthStore from '../../store/authStore';
 import useSettingsStore from '../../store/settingsStore';
@@ -36,8 +58,17 @@ const POSScreen = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const settings = useSettingsStore((s) => s.settings);
-  const brandName = settings?.shopName || 'Zage Fashion Corner';
+  const brandName = settings?.shopName || 'NS Store';
   const pos = usePosStore();
+
+  const [stores, setStores] = useState([]);
+  const [selectedStoreId, setSelectedStoreId] = useState(() => {
+    const saved = localStorage.getItem('posStoreId') || '';
+    if (saved) {
+      setStoreIdHeader(saved);
+    }
+    return saved;
+  });
 
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,6 +108,19 @@ const POSScreen = () => {
   const [creditLoading, setCreditLoading] = useState(false);
   const [settleAmount, setSettleAmount] = useState({});
 
+  // Cashier and Marketing selectors
+  const [agents, setAgents] = useState([]);
+  const [selectedCashierId, setSelectedCashierId] = useState('');
+  const [selectedMarketingId, setSelectedMarketingId] = useState('');
+  const [couriers, setCouriers] = useState([]);
+  const [activeTab, setActiveTab] = useState('products'); // 'products' or 'cart' for mobile responsiveness
+
+  // Customer search sidebar
+  const [showCustomerSearchSidebar, setShowCustomerSearchSidebar] = useState(false);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [searchedCustomers, setSearchedCustomers] = useState([]);
+  const [searchingCustomers, setSearchingCustomers] = useState(false);
+
   const searchRef = useRef(null);
   const searchTimeoutRef = useRef(null);
 
@@ -85,7 +129,147 @@ const POSScreen = () => {
     loadProducts();
     loadTaxRate();
     loadSession();
+    loadAgents();
+    loadCouriers();
+
+    const refreshProducts = () => {
+      if (document.visibilityState === 'visible') {
+        loadProducts();
+      }
+    };
+    document.addEventListener('visibilitychange', refreshProducts);
+    return () => document.removeEventListener('visibilitychange', refreshProducts);
   }, []);
+
+  useEffect(() => {
+    if (user?._id) {
+      setSelectedCashierId(user._id);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const fetchStoresList = async () => {
+      if (user?.role === 'admin') {
+        try {
+          let res;
+          try {
+            res = await getAdminStores();
+          } catch {
+            res = await getStores();
+          }
+          const data = res.data || res || [];
+          const sorted = Array.isArray(data) ? data.slice().sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)) : [];
+          setStores(sorted);
+          
+          let activeStoreId = selectedStoreId;
+          if (!activeStoreId && sorted.length > 0) {
+            activeStoreId = sorted[0]._id;
+            setSelectedStoreId(activeStoreId);
+            localStorage.setItem('posStoreId', activeStoreId);
+          }
+          if (activeStoreId) {
+            setStoreIdHeader(activeStoreId);
+            loadProducts('', activeStoreId);
+            try {
+              const { data: sessionData } = await getActivePosSession({ storeId: activeStoreId });
+              setPosSession(sessionData || null);
+              if (!sessionData) {
+                setShowStartSession(true);
+              } else {
+                setShowStartSession(false);
+              }
+            } catch {}
+          }
+        } catch (err) {
+          console.error('Failed to load store list for admin:', err);
+        }
+      } else {
+        setStoreIdHeader(null);
+      }
+    };
+    fetchStoresList();
+  }, [user]);
+
+  const handleStoreChange = async (storeId) => {
+    setSelectedStoreId(storeId);
+    localStorage.setItem('posStoreId', storeId);
+    setStoreIdHeader(storeId);
+    pos.clearCart();
+    
+    setLoading(true);
+    try {
+      const { data } = await getPosProducts({ storeId });
+      setProducts(data);
+    } catch {
+      toast.error('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
+    
+    try {
+      const { data: sessionData } = await getActivePosSession({ storeId });
+      setPosSession(sessionData || null);
+      if (!sessionData) {
+        setShowStartSession(true);
+      } else {
+        setShowStartSession(false);
+      }
+    } catch {
+      setPosSession(null);
+      setShowStartSession(true);
+    }
+  };
+
+
+  const loadAgents = async () => {
+    try {
+      const { data } = await getPosAgents();
+      setAgents(data || []);
+    } catch (err) {
+      console.warn('Failed to load POS agents:', err);
+    }
+  };
+
+  const loadCouriers = async () => {
+    try {
+      const { data } = await getCouriers();
+      setCouriers(data || []);
+    } catch (err) {
+      console.warn('Failed to load couriers:', err);
+    }
+  };
+
+  const handleSearchCustomers = async (val) => {
+    setCustomerSearchQuery(val);
+    if (!val.trim()) {
+      setSearchedCustomers([]);
+      return;
+    }
+    try {
+      setSearchingCustomers(true);
+      const { data } = await getPosCustomers({ search: val });
+      setSearchedCustomers(data || []);
+    } catch (err) {
+      console.warn('Customer search failed:', err);
+    } finally {
+      setSearchingCustomers(false);
+    }
+  };
+
+  const handleSelectCustomer = (cust) => {
+    pos.setCustomerInfo(cust.name, cust.phone);
+    if (cust.email) {
+      pos.setReceiptOptions({
+        sendSmsReceipt: pos.sendSmsReceipt,
+        sendReceiptEmail: pos.sendReceiptEmail,
+        receiptEmail: cust.email,
+        printReceipt: pos.printReceipt
+      });
+    }
+    setCustomerPoints(cust.loyaltyPoints || 0);
+    setShowCustomerSearchSidebar(false);
+    toast.success(`Customer ${cust.name} selected`);
+  };
 
   const loadSession = async () => {
     try {
@@ -283,6 +467,8 @@ const POSScreen = () => {
           image: item.image,
           quantity: item.quantity,
           price: item.price,
+          courierId: item.courierId || undefined,
+          courierCharge: item.courierCharge || 0,
         })),
         paymentMethod: method,
         tenderedAmount: method === 'cash' ? parseFloat(pos.tenderedAmount) : undefined,
@@ -300,6 +486,10 @@ const POSScreen = () => {
         sendReceiptEmail: pos.sendReceiptEmail,
         receiptEmail: pos.receiptEmail || undefined,
         printReceipt: pos.printReceipt,
+        cashierId: selectedCashierId || undefined,
+        marketingId: selectedMarketingId || undefined,
+        courierService: pos.courierService?.name || undefined,
+        deliveryFee: pos.courierService?.charge || undefined,
       });
 
       setLastOrder(data);
@@ -335,6 +525,8 @@ const POSScreen = () => {
           image: item.image,
           quantity: item.quantity,
           price: item.price,
+          courierId: item.courierId || undefined,
+          courierCharge: item.courierCharge || 0,
         })),
         paymentMethod: 'payhere',
         discount: pos.discount,
@@ -346,14 +538,18 @@ const POSScreen = () => {
         sendReceiptEmail: pos.sendReceiptEmail,
         receiptEmail: pos.receiptEmail || undefined,
         printReceipt: pos.printReceipt,
+        cashierId: selectedCashierId || undefined,
+        marketingId: selectedMarketingId || undefined,
+        courierService: pos.courierService?.name || undefined,
+        deliveryFee: pos.courierService?.charge || undefined,
       });
 
       // 2. Get PayHere hash for this POS order
       const { data: payData } = await getPosPayHereHash({ orderId: order._id, amount: order.totalAmount });
 
       // 3. Submit to PayHere
-      const FRONTEND = 'https://beauty.zage.lk';
-      const BACKEND = 'https://zagebeauty.zage.lk';
+      const FRONTEND = window.location.origin;
+      const BACKEND = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '');
       const form = document.createElement('form');
       const isSandbox = payData.sandbox;
       form.method = 'POST';
@@ -439,6 +635,7 @@ const POSScreen = () => {
   const couponDiscount = pos.getCouponDiscount();
   const loyaltyDiscount = pos.loyaltyDiscount || 0;
   const totalDiscount = pos.getTotalDiscount();
+  const itemCourierCharges = pos.cart.reduce((sum, item) => sum + (Number(item.courierCharge || 0)), 0);
   const taxPercent = (pos.taxRate * 100).toFixed(0);
   const tax = pos.getTax();
   const grandTotal = pos.getGrandTotal();
@@ -512,7 +709,21 @@ const POSScreen = () => {
           <h1 className="pos-topbar-title">{brandName} POS</h1>
         </div>
         <div className="pos-topbar-center">
-          <span className="pos-topbar-store">{user?.assignedStoreName || 'Store'}</span>
+          {user?.role === 'admin' && stores.length > 0 ? (
+            <select
+              value={selectedStoreId}
+              onChange={(e) => handleStoreChange(e.target.value)}
+              className="bg-slate-800 text-white border border-slate-700 rounded-xl px-3 py-1.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-fuchsia-500 cursor-pointer"
+            >
+              {stores.map((s) => (
+                <option key={s._id} value={s._id} className="bg-slate-900 text-white">
+                  {s.name} ({s.city})
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="pos-topbar-store">{user?.assignedStoreName || 'Store'}</span>
+          )}
         </div>
         <div className="pos-topbar-right">
           <button className="pos-topbar-btn" onClick={handleBack} title="Back to Dashboard">
@@ -548,8 +759,28 @@ const POSScreen = () => {
       </header>
 
       <div className="pos-main">
+        {/* Mobile tabs for responsiveness on smaller screens */}
+        <div className="pos-mobile-tabs">
+          <button
+            type="button"
+            className={`pos-mobile-tab-btn ${activeTab === 'products' ? 'active' : ''}`}
+            onClick={() => setActiveTab('products')}
+          >
+            <Package size={18} />
+            <span>Products ({products.length})</span>
+          </button>
+          <button
+            type="button"
+            className={`pos-mobile-tab-btn ${activeTab === 'cart' ? 'active' : ''}`}
+            onClick={() => setActiveTab('cart')}
+          >
+            <ShoppingCart size={18} />
+            <span>Cart ({pos.cart.length})</span>
+          </button>
+        </div>
+
         {/* ──────── LEFT PANEL: Products ──────── */}
-        <div className="pos-products-panel">
+        <div className={`pos-products-panel ${activeTab !== 'products' ? 'mobile-hidden' : ''}`}>
           {/* Search Bar */}
           <div className="pos-search-bar">
             <div className="pos-search-input-wrapper">
@@ -614,10 +845,10 @@ const POSScreen = () => {
                       </div>
                     )}
                     {product.stock <= 5 && product.stock > 0 && (
-                      <span className="pos-stock-badge pos-stock-low">Low</span>
+                      <span className="pos-stock-badge pos-stock-low" style={{backgroundColor:'#ef4444', color:'#fff'}}>Low</span>
                     )}
                     {product.stock <= 0 && (
-                      <span className="pos-stock-badge pos-stock-out">Out</span>
+                      <span className="pos-stock-badge pos-stock-out" style={{backgroundColor:'#dc2626', color:'#fff'}}>Out</span>
                     )}
                   </div>
                   <div className="pos-product-info">
@@ -627,7 +858,7 @@ const POSScreen = () => {
                       <span className="pos-product-unit">/{product.unit}</span>
                     </div>
                     <div className="pos-product-stock-row">
-                      <span className={`pos-product-stock ${product.stock <= 5 ? 'low' : ''}`}>
+                      <span className={`pos-product-stock ${product.stock <= 5 ? 'low' : ''}`} style={product.stock <= 5 ? {color:'#ef4444', fontWeight:'bold'} : {}}>
                         Stock: {product.stock}
                       </span>
                       {product.barcode && (
@@ -647,7 +878,7 @@ const POSScreen = () => {
         </div>
 
         {/* ──────── RIGHT PANEL: Cart ──────── */}
-        <div className="pos-cart-panel">
+        <div className={`pos-cart-panel ${activeTab !== 'cart' ? 'mobile-hidden' : ''}`}>
           <div className="pos-cart-header">
             <Receipt size={20} />
             <h2>Current Sale</h2>
@@ -670,6 +901,31 @@ const POSScreen = () => {
                     <p className="pos-cart-item-price">
                       Rs.{item.price.toFixed(2)} × {item.quantity}
                     </p>
+                  </div>
+                  <div className="pos-cart-item-courier-section">
+                    <div className="pos-cart-item-courier-row">
+                      <select
+                        value={item.courierId || ''}
+                        onChange={(e) => {
+                          const id = e.target.value || null;
+                          const sel = couriers.find(c => (c._id || c.id) === id) || null;
+                          pos.setItemCourier(item.productId, sel ? sel : null);
+                        }}
+                        className="pos-cart-item-courier-select"
+                      >
+                        <option value="">No courier</option>
+                        {couriers.map((c) => (
+                          <option key={c._id} value={c._id}>{c.name}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        value={item.courierCharge || ''}
+                        onChange={(e) => pos.setItemCourierCharge(item.productId, e.target.value)}
+                        placeholder="Courier charge"
+                        className="pos-cart-item-courier-input"
+                      />
+                    </div>
                   </div>
                   <div className="pos-cart-item-controls">
                     <div className="pos-qty-controls">
@@ -705,7 +961,7 @@ const POSScreen = () => {
 
           {/* Totals */}
           {pos.cart.length > 0 && (
-            <div className="pos-cart-totals" style={{display:'flex', flexDirection:'column', maxHeight:'65vh'}}>
+            <div className="pos-cart-totals">
               <div style={{overflowY:'auto', flex:1, paddingRight:'8px', marginBottom:'10px'}}>
                 <div className="pos-total-row">
                   <span>Subtotal</span>
@@ -749,6 +1005,18 @@ const POSScreen = () => {
                   <span>🏆 Loyalty ({pos.loyaltyPointsToRedeem} pts)</span>
                   <span>-Rs. {loyaltyDiscount.toFixed(2)}</span>
                   <button className="pos-discount-clear" onClick={() => pos.clearLoyaltyRedemption()}><X size={12} /></button>
+                </div>
+              )}
+              {itemCourierCharges > 0 && (
+                <div className="pos-total-row pos-discount-row" style={{ background: 'rgba(248, 113, 113, 0.08)', color: '#991b1b', borderRadius: '8px', padding: '6px 10px', marginTop: '4px' }}>
+                  <span>🚚 Item courier charges</span>
+                  <span>+Rs. {itemCourierCharges.toFixed(2)}</span>
+                </div>
+              )}
+              {pos.courierService && pos.courierService.charge > 0 && (
+                <div className="pos-total-row pos-discount-row" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#1e3a8a', borderRadius: '8px', padding: '6px 10px', marginTop: '4px' }}>
+                  <span>🚚 Courier Fee ({pos.courierService.name})</span>
+                  <span>+Rs. {pos.courierService.charge.toFixed(2)}</span>
                 </div>
               )}
 
@@ -814,15 +1082,86 @@ const POSScreen = () => {
                 </div>
               )}
 
-              {/* Customer Info Toggle */}
-              <button
-                className="pos-apply-discount-btn"
-                onClick={() => setShowCustomerInfo(!showCustomerInfo)}
-                style={{marginTop:'4px', background: showCustomerInfo ? '#dbeafe' : undefined, color: showCustomerInfo ? '#2563eb' : undefined}}
-              >
-                <User size={16} />
-                {pos.customerName ? `Customer: ${pos.customerName}` : 'Add Customer Info'}
-              </button>
+              {/* Courier Service Selector */}
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '2px' }}>
+                  Courier Service
+                </label>
+                <select
+                  value={pos.courierService?._id || ''}
+                  onChange={(e) => {
+                    const selected = couriers.find(c => c._id === e.target.value);
+                    if (selected) {
+                      pos.setCourierService(selected);
+                      toast.success(`Courier: ${selected.name} (+Rs.${selected.charge})`);
+                    } else {
+                      pos.clearCourierService();
+                    }
+                  }}
+                  className="pos-input"
+                  style={{ width: '100%', fontSize: '12px', padding: '6px 10px', height: '34px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}
+                >
+                  <option value="" style={{ background: '#1f2937' }}>None (Pick Up / In-Store)</option>
+                  {couriers.map(c => (
+                    <option key={c._id} value={c._id} style={{ background: '#1f2937' }}>
+                      {c.name} (Rs. {c.charge})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Cashier & Marketing selectors */}
+              <div style={{display:'flex', gap:'6px', marginBottom:'8px'}}>
+                <div style={{flex:1}}>
+                  <label style={{display:'block', fontSize:'10px', fontWeight:600, color:'#94a3b8', textTransform:'uppercase', marginBottom:'2px'}}>Cashier</label>
+                  <select
+                    value={selectedCashierId}
+                    onChange={(e) => setSelectedCashierId(e.target.value)}
+                    className="pos-input"
+                    style={{width:'100%', fontSize:'12px', padding:'6px 10px', height:'34px', background:'rgba(255,255,255,0.05)', color:'#fff', border:'1px solid rgba(255,255,255,0.1)'}}
+                  >
+                    <option value="" style={{background:'#1f2937'}}>Select Cashier</option>
+                    {agents.filter(a => a.role !== 'marketing').map(a => (
+                      <option key={a._id} value={a._id} style={{background:'#1f2937'}}>{a.name} ({a.role})</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{flex:1}}>
+                  <label style={{display:'block', fontSize:'10px', fontWeight:600, color:'#94a3b8', textTransform:'uppercase', marginBottom:'2px'}}>Marketing Agent</label>
+                  <select
+                    value={selectedMarketingId}
+                    onChange={(e) => setSelectedMarketingId(e.target.value)}
+                    className="pos-input"
+                    style={{width:'100%', fontSize:'12px', padding:'6px 10px', height:'34px', background:'rgba(255,255,255,0.05)', color:'#fff', border:'1px solid rgba(255,255,255,0.1)'}}
+                  >
+                    <option value="" style={{background:'#1f2937'}}>None (Optional)</option>
+                    {agents.filter(a => a.role === 'marketing').map(a => (
+                      <option key={a._id} value={a._id} style={{background:'#1f2937'}}>{a.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Customer Info Toggles */}
+              <div style={{display:'flex', gap:'6px', marginTop:'4px'}}>
+                <button
+                  type="button"
+                  className="pos-apply-discount-btn"
+                  onClick={() => setShowCustomerInfo(!showCustomerInfo)}
+                  style={{flex:1, margin:0, background: showCustomerInfo ? '#2563eb' : undefined, color: showCustomerInfo ? '#fff' : undefined}}
+                >
+                  <User size={16} />
+                  {pos.customerName ? `Manual: ${pos.customerName}` : 'Manual Customer Info'}
+                </button>
+                <button
+                  type="button"
+                  className="pos-apply-discount-btn"
+                  onClick={() => setShowCustomerSearchSidebar(true)}
+                  style={{flex:1, margin:0, background: '#16a34a', color: '#fff', border: '1px dashed rgba(22,163,74,0.3)'}}
+                >
+                  🔍 Search DB
+                </button>
+              </div>
               {showCustomerInfo && (
                 <div style={{display:'flex', gap:'6px', marginBottom:'6px'}}>
                   <input
@@ -1345,6 +1684,85 @@ const POSScreen = () => {
                     </div>
                   </div>
                 ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Customer Search Sidebar / Modal Overlay */}
+      {showCustomerSearchSidebar && (
+        <div className="pos-modal-overlay" onClick={() => setShowCustomerSearchSidebar(false)} style={{zIndex: 110}}>
+          <div className="pos-credit-panel" onClick={(e) => e.stopPropagation()} style={{maxWidth: '480px', width: '90%'}}>
+            <div className="pos-credit-panel-header">
+              <div>
+                <h2>🔍 Customer Records Lookup</h2>
+                <p>Search registered customer details & records</p>
+              </div>
+              <button className="pos-scanner-close" onClick={() => setShowCustomerSearchSidebar(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="pos-credit-panel-body" style={{padding: '1.25rem'}}>
+              <div className="pos-search-input-wrapper" style={{marginBottom: '1rem', width: '100%', display: 'flex', alignItems: 'center', position: 'relative'}}>
+                <Search size={18} className="pos-search-icon" style={{position:'absolute', left:'12px', color:'#6b7280'}} />
+                <input
+                  type="text"
+                  value={customerSearchQuery}
+                  onChange={(e) => handleSearchCustomers(e.target.value)}
+                  placeholder="Search by name, phone, or email..."
+                  className="pos-search-input"
+                  style={{width: '100%', fontSize: '13px', paddingLeft: '38px', height: '40px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: '#fff'}}
+                  autoFocus
+                />
+              </div>
+
+              {searchingCustomers ? (
+                <div style={{textAlign:'center', padding:'2rem'}}><div className="pos-spinner" /></div>
+              ) : customerSearchQuery && searchedCustomers.length === 0 ? (
+                <div className="pos-credit-empty" style={{padding: '2rem 1rem', textAlign: 'center'}}>
+                  <p style={{fontSize: '2rem', margin: 0}}>❌</p>
+                  <p style={{fontWeight: 600, color: '#f8fafc', marginTop: '10px'}}>No customers found matching "{customerSearchQuery}"</p>
+                  <span style={{fontSize: '11px', color: '#94a3b8'}}>Type correct details or create a new customer record by manually checking out.</span>
+                </div>
+              ) : !customerSearchQuery ? (
+                <div className="pos-credit-empty" style={{padding: '2rem 1rem', textAlign: 'center'}}>
+                  <p style={{fontSize: '2.5rem', margin: 0}}>🔍</p>
+                  <p style={{fontWeight: 600, color: '#cbd5e1', marginTop: '10px'}}>Type to search customers</p>
+                  <span style={{fontSize: '11px', color: '#94a3b8'}}>Results will show real-time name, phone, and loyalty points.</span>
+                </div>
+              ) : (
+                <div style={{display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '55vh', overflowY: 'auto'}}>
+                  {searchedCustomers.map((cust) => (
+                    <div
+                      key={cust._id}
+                      onClick={() => handleSelectCustomer(cust)}
+                      style={{
+                        background: '#111827',
+                        border: '1px solid #374151',
+                        borderRadius: '12px',
+                        padding: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                      className="hover:border-indigo-500 hover:bg-gray-900"
+                    >
+                      <div>
+                        <div style={{fontWeight: 700, color: '#f8fafc', fontSize: '13px'}}>{cust.name}</div>
+                        <div style={{color: '#94a3b8', fontSize: '11px', marginTop: '2px'}}>📞 {cust.phone || 'N/A'}</div>
+                        {cust.email && <div style={{color: '#94a3b8', fontSize: '11px'}}>✉️ {cust.email}</div>}
+                      </div>
+                      <div style={{textAlign: 'right'}}>
+                        <span style={{background: 'rgba(217, 70, 160, 0.1)', color: '#d946a0', border: '1px solid rgba(217, 70, 160, 0.2)', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600}}>
+                          🏆 {cust.loyaltyPoints || 0} pts
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>

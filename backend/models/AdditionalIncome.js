@@ -39,6 +39,11 @@ const additionalIncomeSchema = new mongoose.Schema(
       required: [true, 'Date is required'],
       default: Date.now,
     },
+    paymentMethod: {
+      type: String,
+      enum: ['Bank Transfer', 'Card', 'Cash', 'Other'],
+      default: 'Cash',
+    },
     notes: {
       type: String,
       trim: true,

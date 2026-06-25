@@ -1,7 +1,7 @@
 import { useState, useEffect, Fragment } from 'react';
 import { CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
-import { getAdminOrders, updateOrderStatus, approveOrder, cancelOrder, assignDeliveryGuy, getAvailableDeliveryGuys } from '../../services/api';
+import { getAdminOrders, updateOrderStatus, approveOrder, cancelOrder, assignDeliveryGuy, getAvailableDeliveryGuys, getCouriers } from '../../services/api';
 import useCurrencyStore from '../../store/currencyStore';
 import { toast } from 'react-toastify';
 import { adminNavGroups as navItems } from './adminNavItems';
@@ -31,6 +31,8 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [couriers, setCouriers] = useState([]);
+  const [courierFilter, setCourierFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [expandedId, setExpandedId] = useState(null);
   const [deliveryGuys, setDeliveryGuys] = useState([]);
@@ -42,11 +44,41 @@ const AdminOrders = () => {
       setOrders(data);
       const { data: guys } = await getAvailableDeliveryGuys();
       setDeliveryGuys(guys || []);
+      const { data: courierList } = await getCouriers({ all: true });
+      setCouriers(courierList || []);
     } catch (err) {
       toast.error('Failed to load orders');
     } finally {
       setLoading(false);
     }
+  };
+
+  const getOrderCourierDetails = (order) => {
+    if (order.courierService) {
+      return {
+        name: order.courierService,
+        charge: order.deliveryFee || 0,
+      };
+    }
+    
+    // Find item-level courier
+    const itemCouriers = order.items
+      ?.map((item) => couriers.find((c) => c._id === item.courierId))
+      .filter(Boolean);
+      
+    if (itemCouriers && itemCouriers.length > 0) {
+      const names = [...new Set(itemCouriers.map((c) => c.name))].join(', ');
+      const charge = order.items.reduce((sum, item) => sum + (item.courierCharge || 0), 0);
+      return {
+        name: names,
+        charge: charge,
+      };
+    }
+    
+    return {
+      name: 'N/A',
+      charge: 0,
+    };
   };
 
   const handleAssignDelivery = async (orderId, deliveryGuyId) => {
@@ -98,6 +130,16 @@ const AdminOrders = () => {
   };
 
   const filtered = (filter === 'all' ? orders : orders.filter((o) => o.orderStatus === filter))
+    .filter((o) => {
+      if (courierFilter === 'all') return true;
+      if (o.courierService && o.courierService.toLowerCase() === courierFilter.toLowerCase()) {
+        return true;
+      }
+      return o.items?.some((item) => {
+        const itemCourier = couriers.find((c) => c._id === item.courierId);
+        return itemCourier && itemCourier.name.toLowerCase() === courierFilter.toLowerCase();
+      });
+    })
     .sort((a, b) => {
       if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
       if (sortBy === 'amount_high') return (b.totalAmount || 0) - (a.totalAmount || 0);
@@ -129,16 +171,28 @@ const AdminOrders = () => {
               {orders.length} total · <span className="text-amber-600">{pendingCount} pending approval</span> · Revenue: <span className="text-emerald-600 font-semibold">{formatPrice(convertPrice(totalRevenue))}</span>
             </p>
           </div>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="border border-card-border rounded-xl py-2 px-3 text-sm"
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-            <option value="amount_high">Amount high to low</option>
-            <option value="amount_low">Amount low to high</option>
-          </select>
+          <div className="flex items-center gap-3">
+            <select
+              value={courierFilter}
+              onChange={(e) => setCourierFilter(e.target.value)}
+              className="border border-card-border rounded-xl py-2.5 px-4 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-green"
+            >
+              <option value="all">All Courier Services</option>
+              {couriers.map((c) => (
+                <option key={c._id} value={c.name}>{c.name}</option>
+              ))}
+            </select>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="border border-card-border rounded-xl py-2.5 px-4 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-green"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="amount_high">Amount high to low</option>
+              <option value="amount_low">Amount low to high</option>
+            </select>
+          </div>
         </div>
 
         {/* Filter Pills */}
@@ -168,6 +222,7 @@ const AdminOrders = () => {
                   <th className="text-left px-6 py-3 font-medium text-muted-text">Customer</th>
                   <th className="text-left px-6 py-3 font-medium text-muted-text">Store</th>
                   <th className="text-left px-6 py-3 font-medium text-muted-text">Total</th>
+                  <th className="text-left px-6 py-3 font-medium text-muted-text">Courier</th>
                   <th className="text-left px-6 py-3 font-medium text-muted-text">Payment</th>
                   <th className="text-left px-6 py-3 font-medium text-muted-text">Status</th>
                   <th className="text-left px-6 py-3 font-medium text-muted-text">Delivery</th>
@@ -197,6 +252,20 @@ const AdminOrders = () => {
                       </td>
                       <td className="px-6 py-3.5 text-muted-text">{order.storeId?.name || 'N/A'}</td>
                       <td className="px-6 py-3.5 font-semibold">{formatPrice(convertPrice(order.totalAmount))}</td>
+                      <td className="px-6 py-3.5">
+                        {(() => {
+                          const details = getOrderCourierDetails(order);
+                          if (details.name === 'N/A') {
+                            return <span className="text-gray-400">N/A</span>;
+                          }
+                          return (
+                            <div>
+                              <p className="font-semibold text-indigo-600">{details.name}</p>
+                              <p className="text-xs text-muted-text font-medium">Rs. {details.charge.toLocaleString()}</p>
+                            </div>
+                          );
+                        })()}
+                      </td>
                       <td className="px-6 py-3.5">
                         <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${paymentColors[order.paymentStatus] || 'bg-gray-100 text-gray-600'}`}>
                           {order.paymentStatus}
@@ -253,7 +322,7 @@ const AdminOrders = () => {
                     </tr>
                     {expandedId === order._id && (
                       <tr>
-                        <td colSpan={9} className="px-6 py-4 bg-gray-50 text-sm">
+                        <td colSpan={10} className="px-6 py-4 bg-gray-50 text-sm">
                           <p><strong>Assigned Delivery:</strong> {order.deliveryGuyId?.name || 'Not assigned'}</p>
                           <p><strong>Delivery Address:</strong> {order.deliveryAddress ? `${order.deliveryAddress.street}, ${order.deliveryAddress.city}, ${order.deliveryAddress.state} ${order.deliveryAddress.zipCode}` : 'N/A'}</p>
                         </td>

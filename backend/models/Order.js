@@ -21,6 +21,11 @@ const orderSchema = mongoose.Schema(
         },
         name: String,
         image: String,
+        courierId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Courier',
+        },
+        courierCharge: { type: Number, default: 0 },
         quantity: { type: Number, required: true },
         price: { type: Number, required: true },
         unitCostAtSale: { type: Number, default: 0 },
@@ -45,6 +50,10 @@ const orderSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
+    courierService: {
+      type: String,
+      default: '',
+    },
     tax: {
       type: Number,
       default: 0,
@@ -62,7 +71,7 @@ const orderSchema = mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'completed', 'failed', 'refunded'],
+      enum: ['pending', 'completed', 'failed', 'refunded', 'unpaid', 'due', 'partial'],
       default: 'pending',
     },
     orderStatus: {
@@ -89,6 +98,10 @@ const orderSchema = mongoose.Schema(
       sparse: true,
     },
     cashierId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    marketingId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },

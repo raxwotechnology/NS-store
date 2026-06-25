@@ -8,7 +8,10 @@ const { sendSms, buildPosReceiptMessage } = require('../utils/smsService');
 const { sendEmail, posReceiptEmail } = require('../utils/emailService');
 
 // Helper: resolve store ID for the current user (cashier, manager, or admin)
-const resolveStoreId = async (user) => {
+const resolveStoreId = async (user, req) => {
+  if (req && req.query && req.query.storeId) return req.query.storeId;
+  if (req && req.headers && req.headers['x-store-id']) return req.headers['x-store-id'];
+
   // Cashier / stockEmployee — use assignedStore
   if (user.assignedStore) return user.assignedStore;
 
@@ -18,9 +21,9 @@ const resolveStoreId = async (user) => {
     return store?._id || null;
   }
 
-  // Admin — use first store (they can access any)
+  // Admin — use primary (oldest active) store
   if (user.role === 'admin') {
-    const store = await Store.findOne({ isActive: true });
+    const store = await Store.findOne({ isActive: true }).sort({ createdAt: 1 });
     return store?._id || null;
   }
 
@@ -36,7 +39,7 @@ const calcDenomsTotal = (lines = []) =>
 // @access  Private/Cashier/Manager/Admin
 const getActiveSession = async (req, res, next) => {
   try {
-    const storeId = await resolveStoreId(req.user);
+    const storeId = await resolveStoreId(req.user, req);
     if (!storeId) { res.status(400); return next(new Error('No store found for your account')); }
     const session = await PosSession.findOne({ storeId, cashierId: req.user._id, status: 'open' }).sort({ startedAt: -1 });
     res.json(session || null);
@@ -48,7 +51,7 @@ const getActiveSession = async (req, res, next) => {
 // @access  Private/Cashier/Manager/Admin
 const startSession = async (req, res, next) => {
   try {
-    const storeId = await resolveStoreId(req.user);
+    const storeId = await resolveStoreId(req.user, req);
     if (!storeId) { res.status(400); return next(new Error('No store found for your account')); }
 
     const existing = await PosSession.findOne({ storeId, cashierId: req.user._id, status: 'open' });
@@ -81,7 +84,7 @@ const startSession = async (req, res, next) => {
 // @access  Private/Cashier/Manager/Admin
 const endSession = async (req, res, next) => {
   try {
-    const storeId = await resolveStoreId(req.user);
+    const storeId = await resolveStoreId(req.user, req);
     if (!storeId) { res.status(400); return next(new Error('No store found for your account')); }
 
     const session = await PosSession.findOne({ storeId, cashierId: req.user._id, status: 'open' });
@@ -128,7 +131,7 @@ const endSession = async (req, res, next) => {
 // @access  Private/Cashier/Manager/Admin
 const getPosProducts = async (req, res, next) => {
   try {
-    const storeId = await resolveStoreId(req.user);
+    const storeId = await resolveStoreId(req.user, req);
     if (!storeId) {
       res.status(400);
       return next(new Error('No store found for your account'));
@@ -153,11 +156,13 @@ const getPosProducts = async (req, res, next) => {
       ];
       products = await Product.find(filter)
         .select('name price mrp stock images unit barcode sku variants discount allowKokoPos')
+        .sort({ createdAt: -1 })
         .limit(50)
         .lean();
     } else {
       products = await Product.find(filter)
         .select('name price mrp stock images unit barcode sku variants discount allowKokoPos')
+        .sort({ createdAt: -1 })
         .limit(100)
         .lean();
     }
@@ -173,7 +178,7 @@ const getPosProducts = async (req, res, next) => {
 // @access  Private/Cashier/Manager/Admin
 const getProductByBarcode = async (req, res, next) => {
   try {
-    const storeId = await resolveStoreId(req.user);
+    const storeId = await resolveStoreId(req.user, req);
     if (!storeId) {
       res.status(400);
       return next(new Error('No store found for your account'));
@@ -221,6 +226,8 @@ const posCheckout = async (req, res, next) => {
       creditNote = '',
       loyaltyPointsRedeemed,
       loyaltyDiscount,
+      deliveryFee = 0,
+      courierService = '',
     } = req.body;
     let normalizedCustomerPhone = customerPhone ? formatSLPhone(customerPhone) : undefined;
     if (customerPhone && !isValidSLPhone(customerPhone)) {
@@ -246,7 +253,7 @@ const posCheckout = async (req, res, next) => {
       return next(new Error('No items in cart'));
     }
 
-    const storeId = await resolveStoreId(req.user);
+    const storeId = await resolveStoreId(req.user, req);
     if (!storeId) {
       res.status(400);
       return next(new Error('No store found for your account'));
@@ -295,6 +302,8 @@ const posCheckout = async (req, res, next) => {
         quantity: item.quantity,
         price: item.price,
         unitCostAtSale: Number(product.avgCost || product.lastCost || 0),
+        courierId: item.courierId || undefined,
+        courierCharge: Number(item.courierCharge || 0),
       });
     }
 
@@ -346,6 +355,7 @@ const posCheckout = async (req, res, next) => {
     }
 
     const totalDiscount = discountAmount + couponDiscount;
+    const itemsCourierCharges = items.reduce((sum, item) => sum + (Number(item.courierCharge || 0)), 0);
 
     // Dynamic tax from settings
     let taxRate = 0.05; // default 5%
@@ -355,9 +365,10 @@ const posCheckout = async (req, res, next) => {
       if (settings?.taxRate !== undefined) taxRate = settings.taxRate;
     } catch (err) { /* use default */ }
 
+    const deliveryFeeNum = Number(deliveryFee) || 0;
     const taxableAmount = Math.max(0, subtotal - totalDiscount);
     const tax = parseFloat((taxableAmount * taxRate).toFixed(2));
-    const totalAmount = parseFloat((taxableAmount + tax).toFixed(2));
+    const totalAmount = parseFloat((taxableAmount + tax + deliveryFeeNum + itemsCourierCharges).toFixed(2));
 
     // Change calculation for cash
     let changeGiven = 0;
@@ -383,20 +394,48 @@ const posCheckout = async (req, res, next) => {
     // Credit sale handling
     const creditBalance = isCredit ? Math.max(0, totalAmount - Number(amountPaid || 0)) : 0;
 
+    let orderUserId = req.user._id;
+    if (normalizedCustomerPhone || receiptEmail) {
+      try {
+        const queryList = [];
+        if (normalizedCustomerPhone) queryList.push({ phone: normalizedCustomerPhone });
+        if (receiptEmail) queryList.push({ email: receiptEmail });
+        
+        let customerUser = await User.findOne({ $or: queryList });
+        if (!customerUser) {
+          const randomPass = Math.random().toString(36).slice(-8);
+          customerUser = await User.create({
+            name: customerName || 'Walk-in Customer',
+            email: receiptEmail || `pos_cust_${Date.now()}@zage.com`,
+            phone: normalizedCustomerPhone || undefined,
+            password: randomPass,
+            role: 'customer',
+          });
+        }
+        orderUserId = customerUser._id;
+      } catch (custErr) {
+        console.error('Error finding/creating POS customer User:', custErr.message);
+      }
+    }
+
     // Create the POS order
     const order = await Order.create({
-      userId: req.user._id,
+      userId: orderUserId,
       storeId,
       items: validatedItems,
       totalAmount,
       tax,
-      deliveryFee: 0,
+      deliveryFee: deliveryFeeNum,
+      courierService: courierService || '',
       paymentMethod: paymentMethod || 'cash',
-      paymentStatus: isCredit && creditBalance > 0 ? 'pending' : 'completed',
+      paymentStatus: isCredit
+        ? (Number(amountPaid || 0) === 0 ? 'unpaid' : (creditBalance > 0 ? 'partial' : 'completed'))
+        : 'completed',
       orderStatus: 'completed',
       isPosOrder: true,
       invoiceNumber,
-      cashierId: req.user._id,
+      cashierId: req.body.cashierId || req.user._id,
+      marketingId: req.body.marketingId || undefined,
       posSessionId: activeSession._id,
       tenderedAmount: isCredit ? Number(amountPaid || 0) : (tenderedAmount || totalAmount),
       changeGiven: isCredit ? 0 : changeGiven,
@@ -420,6 +459,14 @@ const posCheckout = async (req, res, next) => {
       await Product.findByIdAndUpdate(item.productId, {
         $inc: { stock: -item.quantity },
       });
+    }
+
+    // Update courier outstanding balance
+    try {
+      const { updateCourierBalanceForOrder } = require('../utils/courierHelper');
+      await updateCourierBalanceForOrder(order, 1);
+    } catch (courierErr) {
+      console.error('Failed to update courier balance:', courierErr.message);
     }
 
     // Return full order with store info for invoice
@@ -606,7 +653,7 @@ const getCashierSalesReport = async (req, res, next) => {
     const filter = { isPosOrder: true, orderStatus: { $ne: 'cancelled' } };
 
     if (req.user.role === 'manager') {
-      const storeId = await resolveStoreId(req.user);
+      const storeId = await resolveStoreId(req.user, req);
       if (storeId) filter.storeId = storeId;
     }
 
@@ -655,13 +702,44 @@ const getCashierSalesReport = async (req, res, next) => {
       lastSale: r.lastSale,
     }));
 
+    // Aggregate marketing agent sales
+    const marketingFilter = { ...filter, marketingId: { $ne: null } };
+    const marketingReport = await Order.aggregate([
+      { $match: marketingFilter },
+      {
+        $group: {
+          _id: '$marketingId',
+          totalSales: { $sum: '$totalAmount' },
+          transactionCount: { $sum: 1 },
+          totalItems: { $sum: { $reduce: { input: '$items', initialValue: 0, in: { $add: ['$$value', '$$this.quantity'] } } } },
+          avgTransaction: { $avg: '$totalAmount' },
+          lastSale: { $max: '$createdAt' },
+        },
+      },
+      { $sort: { totalSales: -1 } },
+    ]);
+
+    const marketingIds = marketingReport.map((r) => r._id).filter(Boolean);
+    const marketingUsers = await User.find({ _id: { $in: marketingIds } }).select('name email role').lean();
+    const marketingMap = {};
+    marketingUsers.forEach((m) => { marketingMap[String(m._id)] = m; });
+
+    const enrichedMarketing = marketingReport.map((r) => ({
+      marketing: marketingMap[String(r._id)] || { name: 'Unknown', email: '' },
+      totalSales: Math.round(r.totalSales * 100) / 100,
+      transactionCount: r.transactionCount,
+      totalItems: r.totalItems,
+      avgTransaction: Math.round(r.avgTransaction * 100) / 100,
+      lastSale: r.lastSale,
+    }));
+
     const totals = {
       totalSales: enriched.reduce((s, r) => s + r.totalSales, 0),
       totalTransactions: enriched.reduce((s, r) => s + r.transactionCount, 0),
       totalItems: enriched.reduce((s, r) => s + r.totalItems, 0),
     };
 
-    res.json({ cashiers: enriched, totals });
+    res.json({ cashiers: enriched, marketing: enrichedMarketing, totals });
   } catch (error) { next(error); }
 };
 
@@ -670,7 +748,7 @@ const getCashierSalesReport = async (req, res, next) => {
 // @access  Private/Cashier/Manager/Admin
 const getCreditOrders = async (req, res, next) => {
   try {
-    const storeId = await resolveStoreId(req.user);
+    const storeId = await resolveStoreId(req.user, req);
     const filter = { isPosOrder: true, isCredit: true, storeId };
     if (req.query.status === 'pending') {
       filter.creditBalance = { $gt: 0 };
@@ -710,6 +788,38 @@ const settleCreditOrder = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+// @desc    Get all active employees (cashiers, marketing, managers, admins) for POS selectors
+// @route   GET /api/pos/agents
+// @access  Private/Cashier/Manager/Admin
+const getPosAgents = async (req, res, next) => {
+  try {
+    const agents = await User.find({
+      role: { $in: ['cashier', 'marketing', 'manager', 'admin'] },
+      isActive: true
+    }).select('name email role').lean();
+    res.json(agents);
+  } catch (error) { next(error); }
+};
+
+// @desc    Get/search customer records for POS screen
+// @route   GET /api/pos/customers
+// @access  Private/Cashier/Manager/Admin
+const getPosCustomers = async (req, res, next) => {
+  try {
+    const { search } = req.query;
+    let query = { role: 'customer' };
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+    const customers = await User.find(query).select('name email phone loyaltyPoints').limit(20).lean();
+    res.json(customers);
+  } catch (error) { next(error); }
+};
+
 module.exports = {
   getPosProducts,
   getProductByBarcode,
@@ -722,4 +832,7 @@ module.exports = {
   getCashierSalesReport,
   getCreditOrders,
   settleCreditOrder,
+  getPosAgents,
+  getPosCustomers,
 };
+

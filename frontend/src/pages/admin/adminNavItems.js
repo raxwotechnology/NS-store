@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Users, Store, Tag, ShoppingBag, Monitor,
   Ticket, BarChart3, DollarSign, Wallet, Package, Gift,
   CreditCard, UserCog, RotateCcw, Barcode, TrendingUp, Brain,
-  Clock, Target, Settings, ChevronRight, Globe,
+  Clock, Target, Settings, ChevronRight, Globe, Truck,
 } from 'lucide-react';
 
 // Groups shape: [{ label: string, items: [{ path, label, icon }] }]
@@ -29,6 +29,7 @@ const adminNavGroups = [
       { path: '/admin/stores',     label: 'Stores',     icon: Store },
       { path: '/admin/categories', label: 'Categories', icon: Tag },
       { path: '/admin/products',   label: 'Products',   icon: Package },
+      { path: '/admin/couriers',   label: 'Courier Services', icon: Truck },
     ],
   },
   {

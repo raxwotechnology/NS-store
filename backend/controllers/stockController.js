@@ -4,6 +4,7 @@ const StockReceipt = require('../models/StockReceipt');
 const SupplierReturn = require('../models/SupplierReturn');
 const Store = require('../models/Store');
 const SupplierPayment = require('../models/SupplierPayment');
+const InventoryTransfer = require('../models/InventoryTransfer');
 
 const resolveStoreId = async (req, { bodyKey = 'storeId', queryKey = 'storeId' } = {}) => {
   const user = req.user;
@@ -371,10 +372,208 @@ const listSupplierReturns = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+// @desc    Create inventory transfer request
+// @route   POST /api/stock/transfers
+// @access  Private/Admin/Manager
+const createInventoryTransfer = async (req, res, next) => {
+  try {
+    const { fromStoreId, toStoreId, items } = req.body;
+    if (!fromStoreId || !toStoreId || !items || items.length === 0) {
+      res.status(400);
+      return next(new Error('fromStoreId, toStoreId, and items are required'));
+    }
+
+    if (String(fromStoreId) === String(toStoreId)) {
+      res.status(400);
+      return next(new Error('Cannot transfer to the same store/branch'));
+    }
+
+    // Verify origin stock
+    for (const it of items) {
+      const product = await Product.findById(it.productId);
+      if (!product) {
+        res.status(404);
+        return next(new Error(`Product not found: ${it.productId}`));
+      }
+      if (product.stock < it.qty) {
+        res.status(400);
+        return next(new Error(`Insufficient stock for ${product.name}. Available: ${product.stock}`));
+      }
+    }
+
+    const transferNo = `TRSF-${Date.now()}`;
+    const transfer = await InventoryTransfer.create({
+      transferNo,
+      fromStoreId,
+      toStoreId,
+      items: items.map(i => ({
+        productId: i.productId,
+        name: i.name,
+        sku: i.sku,
+        barcode: i.barcode,
+        qty: Number(i.qty)
+      })),
+      status: 'pending',
+      createdBy: req.user._id,
+    });
+
+    res.status(201).json(transfer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get inventory transfers
+// @route   GET /api/stock/transfers
+// @access  Private/Admin/Manager
+const getInventoryTransfers = async (req, res, next) => {
+  try {
+    const filter = {};
+    if (req.user.role === 'manager') {
+      const store = await Store.findOne({ managerId: req.user._id });
+      if (store) {
+        filter.$or = [
+          { fromStoreId: store._id },
+          { toStoreId: store._id }
+        ];
+      }
+    } else {
+      const { storeId } = req.query;
+      if (storeId) {
+        filter.$or = [
+          { fromStoreId: storeId },
+          { toStoreId: storeId }
+        ];
+      }
+    }
+
+    const transfers = await InventoryTransfer.find(filter)
+      .populate('fromStoreId', 'name')
+      .populate('toStoreId', 'name')
+      .populate('createdBy', 'name')
+      .populate('receivedBy', 'name')
+      .sort({ createdAt: -1 });
+
+    res.json(transfers);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Complete / Receive inventory transfer
+// @route   PUT /api/stock/transfers/:id/complete
+// @access  Private/Admin/Manager
+const completeInventoryTransfer = async (req, res, next) => {
+  try {
+    const transfer = await InventoryTransfer.findById(req.params.id);
+    if (!transfer) {
+      res.status(404);
+      return next(new Error('Transfer not found'));
+    }
+
+    if (transfer.status !== 'pending') {
+      res.status(400);
+      return next(new Error(`Transfer is already ${transfer.status}`));
+    }
+
+    // Process each item
+    for (const item of transfer.items) {
+      const originProduct = await Product.findById(item.productId);
+      if (!originProduct) {
+        res.status(404);
+        return next(new Error(`Origin product not found: ${item.name}`));
+      }
+
+      if (originProduct.stock < item.qty) {
+        res.status(400);
+        return next(new Error(`Insufficient stock in origin store for product ${item.name}`));
+      }
+
+      // 1. Deduct stock from origin
+      originProduct.stock -= item.qty;
+      await originProduct.save();
+
+      // 2. Add stock to destination
+      // Search for product with same barcode/SKU/name in destination store
+      const destQuery = { storeId: transfer.toStoreId };
+      if (item.barcode) destQuery.barcode = item.barcode;
+      else if (item.sku) destQuery.sku = item.sku;
+      else destQuery.name = item.name;
+
+      let destProduct = await Product.findOne(destQuery);
+      if (destProduct) {
+        // Increment stock
+        destProduct.stock += item.qty;
+        if (!destProduct.priceRows) destProduct.priceRows = [];
+        destProduct.priceRows.push({
+          costPrice: originProduct.costPrice || originProduct.lastCost || 0,
+          qty: item.qty,
+          receivedAt: new Date()
+        });
+        destProduct.markModified('priceRows');
+        await destProduct.save();
+      } else {
+        // Clone from origin to destination
+        const clonedObj = originProduct.toObject();
+        delete clonedObj._id;
+        delete clonedObj.createdAt;
+        delete clonedObj.updatedAt;
+        
+        clonedObj.storeId = transfer.toStoreId;
+        clonedObj.stock = item.qty;
+        clonedObj.slug = originProduct.name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+        clonedObj.priceRows = [{
+          costPrice: originProduct.costPrice || originProduct.lastCost || 0,
+          qty: item.qty,
+          receivedAt: new Date()
+        }];
+
+        await Product.create(clonedObj);
+      }
+    }
+
+    transfer.status = 'completed';
+    transfer.receivedBy = req.user._id;
+    await transfer.save();
+
+    res.json(transfer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Cancel inventory transfer
+// @route   PUT /api/stock/transfers/:id/cancel
+// @access  Private/Admin/Manager
+const cancelInventoryTransfer = async (req, res, next) => {
+  try {
+    const transfer = await InventoryTransfer.findById(req.params.id);
+    if (!transfer) {
+      res.status(404);
+      return next(new Error('Transfer not found'));
+    }
+
+    if (transfer.status !== 'pending') {
+      res.status(400);
+      return next(new Error(`Transfer is already ${transfer.status}`));
+    }
+
+    transfer.status = 'cancelled';
+    await transfer.save();
+    res.json(transfer);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createStockReceipt,
   listStockReceipts,
   getReceiptByGRN,
   createSupplierReturn,
   listSupplierReturns,
+  createInventoryTransfer,
+  getInventoryTransfers,
+  completeInventoryTransfer,
+  cancelInventoryTransfer,
 };

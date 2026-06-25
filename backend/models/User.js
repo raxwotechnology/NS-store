@@ -21,8 +21,16 @@ const userSchema = mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['customer', 'manager', 'admin', 'cashier', 'deliveryGuy', 'stockEmployee'],
+      enum: ['customer', 'manager', 'admin', 'cashier', 'deliveryGuy', 'stockEmployee', 'marketing'],
       default: 'customer',
+    },
+    permissions: {
+      canAddProducts: { type: Boolean, default: true },
+      canDeleteProducts: { type: Boolean, default: true },
+      canEditPrices: { type: Boolean, default: true },
+      canManageInventory: { type: Boolean, default: true },
+      canViewFinancials: { type: Boolean, default: true },
+      canManageEmployees: { type: Boolean, default: true },
     },
     assignedStore: {
       type: mongoose.Schema.Types.ObjectId,
@@ -71,6 +79,7 @@ const userSchema = mongoose.Schema(
       bankName: { type: String },
       epfNo: { type: String },
       etfNo: { type: String },
+      agreementUrl: { type: String },
     },
     // Preferred currency
     preferredCurrency: {

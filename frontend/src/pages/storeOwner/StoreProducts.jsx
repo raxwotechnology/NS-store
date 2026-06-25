@@ -8,15 +8,16 @@ import { managerNavGroups as navItems } from './managerNavItems';
 import SuppliersPanel from '../inventory/SuppliersPanel';
 import StockReceivingPanel from '../inventory/StockReceivingPanel';
 import SupplierReturnsPanel from '../inventory/SupplierReturnsPanel';
-
+import { useConfirmDelete } from '../../components/ConfirmDeleteModal';
 
 
 const emptyForm = {
   name: '', categoryId: '', description: '', price: '', mrp: '', discount: '', unit: 'kg',
-  stock: '', purchasePrice: '', images: '', isFeatured: false, isOnSale: false, allowKokoOnline: true, allowKokoPos: true, status: 'active', storeId: '',
+  stock: '', purchasePrice: '', images: '', isFeatured: false, isOnSale: false, allowKokoOnline: true, allowKokoPos: true, status: 'active', brand: '',
 };
 
 const StoreProducts = () => {
+  const confirmDelete = useConfirmDelete();
   const [products, setProducts] = useState([]);
   const [storeInfo, setStoreInfo] = useState(null);
   const [allStores, setAllStores] = useState([]);
@@ -110,7 +111,10 @@ const StoreProducts = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
+    const product = products.find(p => p._id === id);
+    const prodName = product ? product.name : 'this product';
+    const confirmed = await confirmDelete(`Enter your administrator password to permanently delete the product "${prodName}".`);
+    if (!confirmed) return;
     try {
       await deleteProduct(id);
       toast.success('Product deleted');

@@ -93,7 +93,7 @@ const DashboardLayout = ({ children, navItems, title }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const brandName = settings?.shopName || 'Zage Fashion Corner';
+  const brandName = settings?.shopName || 'NS Store';
   // Use whichever logo field is populated (logoUrl is built by settingsStore from logo path)
   const logoSrc = settings?.logoUrl || settings?.logo || '';
 

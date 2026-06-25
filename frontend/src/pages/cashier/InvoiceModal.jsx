@@ -191,6 +191,13 @@ const InvoiceModal = ({ isOpen, onClose, order, onNewSale }) => {
               <span>Rs. {taxAmount.toFixed(2)}</span>
             </div>
 
+            {order.courierService && order.deliveryFee > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px', color: '#555' }}>
+                <span>Courier ({order.courierService}):</span>
+                <span>Rs. {order.deliveryFee.toFixed(2)}</span>
+              </div>
+            )}
+
             {/* Grand Total */}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 800, padding: '8px 0', borderTop: '2px double #333', borderBottom: '2px double #333', margin: '6px 0', color: '#111' }}>
               <span>TOTAL</span>

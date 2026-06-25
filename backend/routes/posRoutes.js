@@ -12,6 +12,8 @@ const {
   getCashierSalesReport,
   getCreditOrders,
   settleCreditOrder,
+  getPosAgents,
+  getPosCustomers,
 } = require('../controllers/posController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -29,5 +31,9 @@ router.post('/session/end', endSession);
 router.get('/cashier-report', getCashierSalesReport);
 router.get('/credit-orders', getCreditOrders);
 router.put('/credit-orders/:id/settle', settleCreditOrder);
+router.get('/agents', getPosAgents);
+router.get('/customers', getPosCustomers);
+
+
 
 module.exports = router;

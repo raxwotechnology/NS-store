@@ -5,8 +5,10 @@ import { adminNavGroups as navItems } from './adminNavItems';
 import { getOvertimeSummary, getOvertimeRecords, createOvertimeRecord, markOvertimePaid, rejectOvertimeRecord, deleteOvertimeRecord, getEmployeeOTReport } from '../../services/api';
 import API from '../../services/api';
 import { toast } from 'react-toastify';
+import { useConfirmDelete } from '../../components/ConfirmDeleteModal';
 
 const AdminOvertime = () => {
+  const confirmDelete = useConfirmDelete();
   const [tab, setTab] = useState('summary');
   const [summary, setSummary] = useState([]);
   const [records, setRecords] = useState([]);
@@ -86,7 +88,12 @@ const AdminOvertime = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this OT record?')) return;
+    const record = records.find(r => r._id === id) || (empReport && empReport.records && empReport.records.find(r => r._id === id));
+    const empName = record && record.employeeId ? record.employeeId.name : '';
+    const dateStr = record ? new Date(record.date).toLocaleDateString() : '';
+    const description = empName ? `OT record for "${empName}" on ${dateStr}` : 'this OT record';
+    const confirmed = await confirmDelete(`Enter your administrator password to permanently delete ${description}.`);
+    if (!confirmed) return;
     try {
       await deleteOvertimeRecord(id);
       toast.success('Deleted');

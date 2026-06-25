@@ -7,8 +7,10 @@ import { toast } from 'react-toastify';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useConfirmDelete } from '../../components/ConfirmDeleteModal';
 
 const AdminSupplierPayments = () => {
+  const confirmDelete = useConfirmDelete();
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -168,7 +170,10 @@ const AdminSupplierPayments = () => {
   };
 
   const handleDeleteTx = async (id) => {
-    if (!window.confirm('Delete this transaction? This cannot be undone.')) return;
+    const tx = ledger && ledger.transactions && ledger.transactions.find(t => t._id === id);
+    const txDesc = tx ? `${tx.type} of amount ${tx.amount}` : 'this transaction';
+    const confirmed = await confirmDelete(`Enter your administrator password to permanently delete the supplier transaction "${txDesc}". This cannot be undone.`);
+    if (!confirmed) return;
     try {
       await deleteSupplierTransaction(id);
       toast.success('Transaction deleted');

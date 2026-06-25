@@ -3,10 +3,12 @@ import { Edit2, Plus, Search, Trash2, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useAuthStore from '../../store/authStore';
 import { createSupplier, deleteSupplier, getSuppliers, updateSupplier } from '../../services/api';
+import { useConfirmDelete } from '../../components/ConfirmDeleteModal';
 
 const emptyForm = { name: '', email: '', phone: '', address: '', status: 'active' };
 
 const SuppliersPanel = ({ storeId, stores = [], onStoreChange }) => {
+  const confirmDelete = useConfirmDelete();
   const user = useAuthStore((s) => s.user);
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,7 +100,10 @@ const SuppliersPanel = ({ storeId, stores = [], onStoreChange }) => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this supplier?')) return;
+    const supplier = suppliers.find(s => s._id === id);
+    const supplierName = supplier ? supplier.name : 'this supplier';
+    const confirmed = await confirmDelete(`Enter your administrator password to permanently delete the supplier "${supplierName}".`);
+    if (!confirmed) return;
     try {
       await deleteSupplier(id);
       toast.success('Supplier deleted');

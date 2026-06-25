@@ -4,6 +4,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import { getTargets, getEmployees, createTarget, updateTargetProgress, payTargetBonus, deleteTarget } from '../../services/api';
 import { toast } from 'react-toastify';
 import { managerNavGroups as navItems } from './managerNavItems';
+import { useConfirmDelete } from '../../components/ConfirmDeleteModal';
 
 const TARGET_TYPES = [
   { value: 'sales', label: 'Sales (Rs.)' },
@@ -13,6 +14,7 @@ const TARGET_TYPES = [
 ];
 
 const ManagerTargets = () => {
+  const confirmDelete = useConfirmDelete();
   const [targets, setTargets] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +86,11 @@ const ManagerTargets = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this target?')) return;
+    const target = targets.find(t => t._id === id);
+    const empName = target && target.employeeId ? target.employeeId.name : '';
+    const desc = empName ? `target for "${empName}"` : 'this target';
+    const confirmed = await confirmDelete(`Enter your administrator password to permanently delete the ${desc}.`);
+    if (!confirmed) return;
     try {
       await deleteTarget(id);
       toast.success('Target deleted');

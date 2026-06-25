@@ -11,14 +11,18 @@ const {
   deleteProduct,
   getMyProducts,
   getPriceHistory,
+  importProductsExcel,
 } = require('../controllers/productController');
 const { protect, authorize } = require('../middleware/authMiddleware');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Public routes (order matters — put specific before :id)
 router.get('/search', searchProducts);
 router.get('/featured', getFeaturedProducts);
 router.get('/deals', getDeals);
 router.get('/my-store', protect, authorize('manager'), getMyProducts);
+router.post('/import-excel', protect, authorize('manager', 'admin'), upload.single('file'), importProductsExcel);
 
 router.route('/')
   .get(getProducts)

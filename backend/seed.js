@@ -64,6 +64,21 @@ const seedData = async () => {
       isActive: true,
     });
 
+    const store3 = await Store.create({
+      managerId: manager1._id,
+      name: 'NS Store',
+      slug: 'ns-store',
+      description: 'Premium store offering fashion, cosmetics, and accessories.',
+      address: '742 Store Lane, Colombo',
+      city: 'Colombo',
+      phone: '071 9781939',
+      email: 'info@nsstore.com',
+      bannerImage: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200',
+      logo: '/uploads/logo-ns-store.jpg',
+      operatingHours: { open: '09:00', close: '21:00' },
+      isActive: true,
+    });
+
     console.log('Stores created...');
 
     // Keep existing staff users and remap assigned stores

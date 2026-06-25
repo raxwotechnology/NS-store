@@ -6,6 +6,7 @@ import useAuthStore from '../store/authStore';
 import useSettingsStore from '../store/settingsStore';
 import { requestRegistrationOtp, verifyRegistrationOtp } from '../services/api';
 import { toast } from 'react-toastify';
+import logoImg from '../assets/logo.jpeg';
 
 // Sri Lankan phone validation
 const SL_PHONE_REGEX = /^(?:\+94|0)?[0-9]{9}$/;
@@ -26,7 +27,7 @@ const Register = () => {
   const [phoneError, setPhoneError] = useState('');
   const login = useAuthStore((state) => state.login);
   const settings = useSettingsStore((s) => s.settings);
-  const brandName = settings?.shopName || 'Zage Fashion Corner';
+  const brandName = settings?.shopName || 'NS Store';
   const brandLogoUrl = settings?.logoUrl;
   const navigate = useNavigate();
 
@@ -92,7 +93,17 @@ const Register = () => {
       >
         <div className="text-center mb-8">
           <Link to="/" className="text-3xl font-bold text-primary-green inline-flex items-center gap-2 mb-4">
-            {brandLogoUrl && <img src={brandLogoUrl} alt={brandName} className="w-9 h-9 rounded object-cover" />}
+            {brandLogoUrl && (
+              <img 
+                src={brandLogoUrl} 
+                alt={brandName} 
+                className="w-9 h-9 rounded object-cover" 
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = logoImg;
+                }}
+              />
+            )}
             <span>{brandName}</span>
           </Link>
           <h1 className="text-2xl font-bold text-dark-navy mt-0 mb-2">Create Account</h1>

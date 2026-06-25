@@ -53,6 +53,11 @@ const expenseSchema = new mongoose.Schema(
       enum: ['Paid', 'Pending'],
       default: 'Pending',
     },
+    paymentMethod: {
+      type: String,
+      enum: ['Bank Transfer', 'Card', 'Cash', 'Other'],
+      default: 'Cash',
+    },
     notes: {
       type: String,
       trim: true,

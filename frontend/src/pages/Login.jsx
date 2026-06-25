@@ -6,6 +6,7 @@ import useAuthStore from '../store/authStore';
 import useSettingsStore from '../store/settingsStore';
 import { loginUser } from '../services/api';
 import { toast } from 'react-toastify';
+import logoImg from '../assets/logo.jpeg';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -14,7 +15,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login, user, isAuthenticated, logout } = useAuthStore();
   const settings = useSettingsStore((s) => s.settings);
-  const brandName = settings?.shopName || 'Zage Fashion Corner';
+  const brandName = settings?.shopName || 'NS Store';
   const brandLogoUrl = settings?.logoUrl;
   const navigate = useNavigate();
 
@@ -52,7 +53,17 @@ const Login = () => {
         >
           <div className="text-center mb-6">
             <Link to="/" className="text-3xl font-bold text-primary-green inline-flex items-center gap-2 mb-4">
-              {brandLogoUrl && <img src={brandLogoUrl} alt={brandName} className="w-9 h-9 rounded object-cover" />}
+              {brandLogoUrl && (
+                <img 
+                  src={brandLogoUrl} 
+                  alt={brandName} 
+                  className="w-9 h-9 rounded object-cover" 
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = logoImg;
+                  }}
+                />
+              )}
               <span>{brandName}</span>
             </Link>
             <h1 className="text-2xl font-bold text-dark-navy mt-0 mb-2">Already Signed In</h1>
@@ -94,7 +105,17 @@ const Login = () => {
       >
         <div className="text-center mb-8">
           <Link to="/" className="text-3xl font-bold text-primary-green inline-flex items-center gap-2 mb-4">
-            {brandLogoUrl && <img src={brandLogoUrl} alt={brandName} className="w-9 h-9 rounded object-cover" />}
+            {brandLogoUrl && (
+              <img 
+                src={brandLogoUrl} 
+                alt={brandName} 
+                className="w-9 h-9 rounded object-cover" 
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = logoImg;
+                }}
+              />
+            )}
             <span>{brandName}</span>
           </Link>
           <h1 className="text-2xl font-bold text-dark-navy mt-0 mb-2">Welcome Back</h1>

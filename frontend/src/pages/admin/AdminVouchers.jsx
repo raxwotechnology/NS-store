@@ -7,6 +7,7 @@ import { adminNavGroups as navItems } from './adminNavItems';
 import useSettingsStore from '../../store/settingsStore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useConfirmDelete } from '../../components/ConfirmDeleteModal';
 
 const emptyForm = {
   code: '', type: 'percentage', value: '', minOrderAmount: '', maxDiscountAmount: '', maxUses: '',
@@ -15,6 +16,7 @@ const emptyForm = {
 };
 
 const AdminVouchers = () => {
+  const confirmDelete = useConfirmDelete();
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -140,7 +142,10 @@ const AdminVouchers = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this voucher?')) return;
+    const voucher = vouchers.find(v => v._id === id);
+    const voucherCode = voucher ? voucher.code : 'this voucher';
+    const confirmed = await confirmDelete(`Enter your administrator password to permanently delete the voucher "${voucherCode}".`);
+    if (!confirmed) return;
     try {
       await API.delete(`/loyalty/vouchers/${id}`);
       toast.success('Voucher deleted');

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, ShoppingCart, Heart } from 'lucide-react';
 import useCartStore from '../store/cartStore';
@@ -7,13 +8,17 @@ import useCurrencyStore from '../store/currencyStore';
 import { toast } from 'react-toastify';
 
 const ProductCard = ({ product }) => {
+  const [hovered, setHovered] = useState(false);
   const { addItem } = useCartStore();
   const { addProduct, removeProduct, isInWishlist } = useWishlistStore();
   const { user } = useAuthStore();
   const { getProductPrice, getProductPriceRaw, formatPrice, exchangeRate, currency } = useCurrencyStore();
 
-  const imageUrl = product.images?.[0] || 'https://via.placeholder.com/400x400?text=Beauty+Product';
+  const mainImage = product.images?.[0] || 'https://via.placeholder.com/400x400?text=Beauty+Product';
+  const hoverImage = product.images?.[1] || mainImage;
+  const displayImage = hovered ? hoverImage : mainImage;
   const storeName = product.storeId?.name || 'Zage Boutique';
+  const categoryName = product.categoryId?.name || 'No category';
   const wishlisted = user && isInWishlist(product._id);
 
   const handleAddToCart = async (e) => {
@@ -49,9 +54,13 @@ const ProductCard = ({ product }) => {
 
   return (
     <Link to={`/product/${product._id}`} className="block group">
-      <div className="bg-white border border-card-border rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-rose-300">
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className="bg-white border border-card-border rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-rose-300"
+      >
         <div className="relative overflow-hidden bg-rose-50/40 aspect-square">
-          <img src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+          <img src={displayImage} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
           {product.discount > 0 && (
             <span className="absolute top-3 left-3 bg-rose-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">-{product.discount}%</span>
           )}
@@ -67,7 +76,7 @@ const ProductCard = ({ product }) => {
           </button>
         </div>
         <div className="p-4">
-          <p className="text-xs text-muted-text m-0 mb-1 truncate">{storeName}</p>
+          <p className="text-xs text-muted-text m-0 mb-1 truncate">{storeName} · {categoryName}</p>
           <h3 className="font-semibold text-dark-navy text-sm mb-2 mt-0 leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-primary-green transition-colors">{product.name}</h3>
           <div className="flex items-center gap-1 mb-2">
             <Star size={14} className="fill-accent-orange text-accent-orange" />

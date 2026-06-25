@@ -4,6 +4,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import { adminNavGroups as navItems } from './adminNavItems';
 import { getPromotions, createPromotion, deletePromotion, togglePromotion } from '../../services/api';
 import { toast } from 'react-toastify';
+import { useConfirmDelete } from '../../components/ConfirmDeleteModal';
 
 const PROMO_TYPES = [
   { value: 'percentage', label: 'Percentage Off', icon: '🏷️' },
@@ -13,6 +14,7 @@ const PROMO_TYPES = [
 ];
 
 const AdminPromotions = () => {
+  const confirmDelete = useConfirmDelete();
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -68,7 +70,10 @@ const AdminPromotions = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this promotion?')) return;
+    const promo = promotions.find(p => p._id === id);
+    const promoName = promo ? promo.name : 'this promotion';
+    const confirmed = await confirmDelete(`Enter your administrator password to permanently delete the promotion "${promoName}".`);
+    if (!confirmed) return;
     try {
       await deletePromotion(id);
       toast.success('Deleted');
