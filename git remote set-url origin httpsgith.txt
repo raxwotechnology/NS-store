@@ -1,0 +1,6 @@
+git remote set-url origin https://github.com/raxwotechnology/NS-store.git
+
+git add .
+git commit -m "Switch repository and reset code"
+
+git push origin main --force
