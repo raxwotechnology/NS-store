@@ -6,7 +6,7 @@ import axios from 'axios';
 
 const API = axios.create({
   baseURL: (import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')) + '/api',
-  timeout: 30000, // 30s timeout (Render free tier cold starts can be slow)
+  timeout: 60000, // 60s timeout (Render free tier cold starts can take up to 50s)
   headers: {
     'Content-Type': 'application/json',
   },
@@ -34,6 +34,13 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (!error.response) {
+      error.response = {
+        data: {
+          message: 'Server connection failed. The server may be starting up (Render free tier cold start). Please try again in 15-30 seconds.'
+        }
+      };
+    }
     if (error.response && error.response.status === 401) {
       // Clear ALL auth-related storage
       localStorage.removeItem('userInfo');
