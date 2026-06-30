@@ -29,6 +29,9 @@ const settingsSchema = new mongoose.Schema({
     price: { type: Number },
     emoji: { type: String },
   }],
+  showHeroBadges: { type: Boolean, default: true },
+  heroImage: { type: String, default: '' },
+  heroImageUrl: { type: String, default: '' },
   maintenanceMode: { type: Boolean, default: false },
   rolePermissions: {
     cashier: {

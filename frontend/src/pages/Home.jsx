@@ -104,10 +104,14 @@ const Home = () => {
           >
             <div className="relative">
               <div className="w-80 h-80 md:w-96 md:h-96 rounded-full bg-gradient-to-br from-rose-100 to-stone-200 flex items-center justify-center shadow-2xl overflow-hidden border-4 border-white">
-                <span className="text-8xl">💄</span>
+                {settings?.heroImageUrl || settings?.heroImage ? (
+                  <img src={settings?.heroImageUrl || settings?.heroImage} alt="Hero" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-8xl">💄</span>
+                )}
               </div>
               {/* Floating badges */}
-              {heroProducts[0] && (
+              {settings?.showHeroBadges !== false && heroProducts[0] && (
                 <motion.div
                   className="absolute -top-4 right-0 bg-white rounded-2xl shadow-lg p-3 flex items-center gap-2"
                   animate={{ y: [0, -8, 0] }}
@@ -120,7 +124,7 @@ const Home = () => {
                   </div>
                 </motion.div>
               )}
-              {heroProducts[1] && (
+              {settings?.showHeroBadges !== false && heroProducts[1] && (
                 <motion.div
                   className="absolute bottom-4 -left-4 bg-white rounded-2xl shadow-lg p-3 flex items-center gap-2"
                   animate={{ y: [0, 8, 0] }}

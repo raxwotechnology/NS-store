@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Settings, Save, Upload, Globe, Phone, Mail, MapPin, Palette, DollarSign, Gift, Shield, Store, UserCog } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
-import { getSettings, updateSettings, uploadLogo } from '../../services/api';
+import { getSettings, updateSettings, uploadLogo, uploadHeroImage } from '../../services/api';
 import { toast } from 'react-toastify';
 import { adminNavGroups as navItems } from './adminNavItems';
 import useSettingsStore from '../../store/settingsStore';
@@ -28,6 +28,7 @@ const AdminSettings = () => {
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState('general');
   const fileRef = useRef(null);
+  const heroFileRef = useRef(null);
   const setSettingsLocal = useSettingsStore((s) => s.setSettingsLocal);
 
   useEffect(() => { fetchSettings(); }, []);
@@ -81,6 +82,24 @@ const AdminSettings = () => {
     }
   };
 
+  const handleHeroImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = '';
+    const formData = new FormData();
+    formData.append('heroImage', file);
+    try {
+      const { data } = await uploadHeroImage(formData);
+      const heroPath = data.heroImageUrl || data.heroImage;
+      const merged = { ...settings, heroImageUrl: heroPath, heroImage: heroPath };
+      setSettings(merged);
+      setSettingsLocal(merged);
+      toast.success('Hero image uploaded successfully! ✅');
+    } catch (err) {
+      toast.error('Failed to upload hero image: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
   if (loading) return <DashboardLayout navItems={navItems} title="Zage Admin Panel"><div className="flex items-center justify-center h-64"><div className="w-10 h-10 border-4 border-primary-green border-t-transparent rounded-full animate-spin" /></div></DashboardLayout>;
 
   const tabs = [
@@ -120,23 +139,53 @@ const AdminSettings = () => {
         {/* General */}
         {tab === 'general' && (
           <div className="space-y-6">
-            {/* Logo */}
+            {/* Shop Branding */}
             <div className="bg-white rounded-2xl border border-card-border p-6 shadow-sm">
               <h2 className="font-semibold text-dark-navy mb-4">Shop Branding</h2>
-              <div className="flex items-center gap-6 mb-6">
-                <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-card-border flex items-center justify-center overflow-hidden bg-gray-50">
-                  {(settings.logoUrl || settings.logo) ? (
-                    <img src={settings.logoUrl || settings.logo} alt="Logo" className="w-full h-full object-cover" />
-                  ) : (
-                    <Store size={32} className="text-gray-300" />
-                  )}
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                {/* Logo Upload */}
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-2xl border border-card-border flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
+                    {(settings.logoUrl || settings.logo) ? (
+                      <img src={settings.logoUrl || settings.logo} alt="Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <Store size={24} className="text-gray-300" />
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-xs font-semibold text-dark-navy mb-1">Shop Logo</span>
+                    <button onClick={() => fileRef.current?.click()} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">
+                      <Upload size={12} /> Upload Logo
+                    </button>
+                    <input ref={fileRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                    <p className="text-[10px] text-muted-text mt-1">PNG, JPG, or SVG. Max 2MB.</p>
+                  </div>
                 </div>
-                <div>
-                  <button onClick={() => fileRef.current?.click()} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
-                    <Upload size={14} /> Upload Logo
-                  </button>
-                  <input ref={fileRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
-                  <p className="text-xs text-muted-text mt-2">PNG, JPG, or SVG. Max 2MB.</p>
+
+                {/* Hero Image Upload */}
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-2xl border border-card-border flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
+                    {(settings.heroImageUrl || settings.heroImage) ? (
+                      <img src={settings.heroImageUrl || settings.heroImage} alt="Hero" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-3xl">💄</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-xs font-semibold text-dark-navy mb-1">Hero Section Image</span>
+                    <div className="flex gap-2">
+                      <button onClick={() => heroFileRef.current?.click()} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">
+                        <Upload size={12} /> Upload Hero Image
+                      </button>
+                      {(settings.heroImageUrl || settings.heroImage) && (
+                        <button onClick={() => handleChange('heroImage', '')} className="text-red-600 hover:text-red-700 text-xs font-medium px-2 py-1.5 rounded-lg border border-red-200 hover:bg-red-50 transition-all">
+                          Reset to 💄
+                        </button>
+                      )}
+                    </div>
+                    <input ref={heroFileRef} type="file" accept="image/*" onChange={handleHeroImageUpload} className="hidden" />
+                    <p className="text-[10px] text-muted-text mt-1">PNG, JPG, or SVG. Max 5MB.</p>
+                  </div>
                 </div>
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -155,6 +204,20 @@ const AdminSettings = () => {
             <div className="bg-white rounded-2xl border border-card-border p-6 shadow-sm">
               <h2 className="font-semibold text-dark-navy mb-2">🏠 Landing Page Hero Products</h2>
               <p className="text-xs text-muted-text mb-4">These appear as floating badges on the homepage hero section.</p>
+              
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-card-border mb-4">
+                <div>
+                  <p className="text-sm font-semibold text-dark-navy">Show Floating Product Badges</p>
+                  <p className="text-xs text-muted-text">Toggle showing the floating product badges on the homepage hero section.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.showHeroBadges !== false}
+                  onChange={(e) => handleChange('showHeroBadges', e.target.checked)}
+                  className="w-5 h-5 accent-primary-green cursor-pointer"
+                />
+              </div>
+
               {[0, 1].map((idx) => {
                 const products = settings.heroProducts || [];
                 const prod = products[idx] || { name: '', price: '', emoji: '' };

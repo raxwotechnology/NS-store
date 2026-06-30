@@ -26,7 +26,7 @@ const updateSettings = async (req, res) => {
       'shopName', 'tagline', 'email', 'phone', 'phone2', 'address', 'city', 'country',
       'currency', 'exchangeRate', 'deliveryFeeThreshold', 'deliveryFee', 'taxRate',
       'loyaltyPointsPerUnit', 'loyaltyPointValue', 'footerText', 'maintenanceMode',
-      'logoUrl', 'logo',
+      'logoUrl', 'logo', 'showHeroBadges', 'heroImage', 'heroImageUrl',
     ];
 
     fields.forEach(field => {
@@ -81,4 +81,27 @@ const uploadLogo = async (req, res) => {
   }
 };
 
-module.exports = { getSettings, updateSettings, uploadLogo };
+// Upload hero image
+const uploadHeroImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = new Settings({});
+    }
+
+    const heroImagePath = `/uploads/${req.file.filename}`;
+    settings.heroImage = heroImagePath;
+    settings.heroImageUrl = heroImagePath;
+    await settings.save();
+
+    res.json({ heroImage: heroImagePath, heroImageUrl: heroImagePath, message: 'Hero image updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { getSettings, updateSettings, uploadLogo, uploadHeroImage };

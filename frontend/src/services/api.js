@@ -217,6 +217,7 @@ export const exportSalaryHistory = (employeeId, params) =>
 export const getSettings = () => API.get('/settings');
 export const updateSettings = (data) => API.put('/settings', data);
 export const uploadLogo = (formData) => API.post('/settings/logo', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const uploadHeroImage = (formData) => API.post('/settings/hero-image', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
 // Courier Services
 export const getCouriers = (params) => API.get('/couriers', { params });

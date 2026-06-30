@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { protect, authorize } = require('../middleware/authMiddleware');
-const { getSettings, updateSettings, uploadLogo } = require('../controllers/settingsController');
+const { getSettings, updateSettings, uploadLogo, uploadHeroImage } = require('../controllers/settingsController');
 
 // Ensure uploads directory exists (absolute path — works regardless of CWD)
 const uploadsDir = path.join(__dirname, '..', 'uploads');
@@ -15,7 +15,10 @@ if (!fs.existsSync(uploadsDir)) {
 // Multer config for logo upload — use absolute destination path
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
-  filename: (req, file, cb) => cb(null, `logo-${Date.now()}${path.extname(file.originalname).toLowerCase()}`),
+  filename: (req, file, cb) => {
+    const prefix = file.fieldname === 'heroImage' ? 'hero' : 'logo';
+    cb(null, `${prefix}-${Date.now()}${path.extname(file.originalname).toLowerCase()}`);
+  },
 });
 
 const upload = multer({
@@ -38,5 +41,6 @@ router.get('/', getSettings);
 // Admin only
 router.put('/', protect, authorize('admin'), updateSettings);
 router.post('/logo', protect, authorize('admin'), upload.single('logo'), uploadLogo);
+router.post('/hero-image', protect, authorize('admin'), upload.single('heroImage'), uploadHeroImage);
 
 module.exports = router;
