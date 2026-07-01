@@ -111,7 +111,7 @@ const Home = () => {
                 )}
               </div>
               {/* Floating badges */}
-              {settings?.showHeroBadges !== false && heroProducts[0] && (
+              {settings?.showHeroBadges !== false && heroProducts[0] && heroProducts[0].name && (
                 <motion.div
                   className="absolute -top-4 right-0 bg-white rounded-2xl shadow-lg p-3 flex items-center gap-2"
                   animate={{ y: [0, -8, 0] }}
@@ -124,7 +124,7 @@ const Home = () => {
                   </div>
                 </motion.div>
               )}
-              {settings?.showHeroBadges !== false && heroProducts[1] && (
+              {settings?.showHeroBadges !== false && heroProducts[1] && heroProducts[1].name && (
                 <motion.div
                   className="absolute bottom-4 -left-4 bg-white rounded-2xl shadow-lg p-3 flex items-center gap-2"
                   animate={{ y: [0, 8, 0] }}

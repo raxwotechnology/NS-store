@@ -5,6 +5,7 @@ import { getEmployees, addEmployee, updateEmployee, adminMarkAttendance, adminCr
 import { toast } from 'react-toastify';
 import { managerNavGroups as navItems } from './managerNavItems';
 import useAuthStore from '../../store/authStore';
+import { toAbsoluteUrl } from '../../utils/imageUtils';
 
 
 
@@ -36,9 +37,7 @@ const ManagerEmployees = ({ navItems = managerNavItems, title = 'Manager Dashboa
   const [uploadingEmpId, setUploadingEmpId] = useState(null);
 
   const getAgreementFullUrl = (url) => {
-    if (!url) return '';
-    const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
-    return `${base}${url}`;
+    return toAbsoluteUrl(url) || '';
   };
 
   const handleUploadAgreement = async (id, file) => {
