@@ -12,12 +12,14 @@ const useSettingsStore = create((set) => ({
     set({ loading: true });
     try {
       const { data } = await getSettings();
+      const logoPath = toAbsoluteUrl(data.logo || data.logoUrl);
+      const heroPath = toAbsoluteUrl(data.heroImage || data.heroImageUrl);
+      const cacheBuster = data.updatedAt ? `?t=${new Date(data.updatedAt).getTime()}` : '';
       set({
         settings: {
           ...data,
-          // Build accessible URLs
-          logoUrl: toAbsoluteUrl(data.logo || data.logoUrl),
-          heroImageUrl: toAbsoluteUrl(data.heroImage || data.heroImageUrl),
+          logoUrl: logoPath ? logoPath + cacheBuster : null,
+          heroImageUrl: heroPath ? heroPath + cacheBuster : null,
         },
         loaded: true,
       });
@@ -29,14 +31,19 @@ const useSettingsStore = create((set) => ({
   },
 
   setSettingsLocal: (settings) => {
+    if (!settings) {
+      set({ settings: null, loaded: true });
+      return;
+    }
+    const logoPath = toAbsoluteUrl(settings.logo || settings.logoUrl);
+    const heroPath = toAbsoluteUrl(settings.heroImage || settings.heroImageUrl);
+    const cacheBuster = settings.updatedAt ? `?t=${new Date(settings.updatedAt).getTime()}` : '';
     set({
-      settings: settings
-          ? {
-              ...settings,
-              logoUrl: toAbsoluteUrl(settings.logo || settings.logoUrl),
-              heroImageUrl: toAbsoluteUrl(settings.heroImage || settings.heroImageUrl),
-            }
-          : null,
+      settings: {
+        ...settings,
+        logoUrl: logoPath ? logoPath + cacheBuster : null,
+        heroImageUrl: heroPath ? heroPath + cacheBuster : null,
+      },
       loaded: true,
     });
   },

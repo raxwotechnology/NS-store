@@ -214,7 +214,7 @@ export const exportSalaryHistory = (employeeId, params) =>
   API.get(`/payroll/history/${employeeId}/export`, { params, responseType: 'blob' });
 
 // Settings
-export const getSettings = () => API.get('/settings');
+export const getSettings = () => API.get('/settings', { params: { t: Date.now() } });
 export const updateSettings = (data) => API.put('/settings', data);
 export const uploadLogo = (formData) => API.post('/settings/logo', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const uploadHeroImage = (formData) => API.post('/settings/hero-image', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
