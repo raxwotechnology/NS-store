@@ -130,7 +130,7 @@ const StockReceivingPanel = ({ storeId, products }) => {
   };
 
   const printVoucher = (receipt) => {
-    const siteName = settings?.shopName || 'Zage Fashion Corner';
+    const siteName = settings?.shopName || 'NS Store';
     const logoUrl = settings?.logoUrl || settings?.logo || '';
     const itemRows = (receipt.items || []).map((it, i) => {
       const qty = printQty[`${receipt._id}_${i}`] || it.qty;

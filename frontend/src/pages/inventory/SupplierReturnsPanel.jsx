@@ -109,7 +109,7 @@ const SupplierReturnsPanel = ({ storeId, products }) => {
   };
 
   const printReturnVoucher = (ret) => {
-    const siteName = settings?.shopName || 'Zage Fashion Corner';
+    const siteName = settings?.shopName || 'NS Store';
     const logoUrl = settings?.logoUrl || settings?.logo || '';
     const itemRows = (ret.items || []).map((it, i) => `<tr>
       <td style="padding:8px;border:1px solid #ddd">${i + 1}</td>

@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
 const settingsSchema = new mongoose.Schema({
-  shopName: { type: String, default: 'Zage Fashion Corner' },
+  shopName: { type: String, default: 'NS Store' },
   tagline: { type: String, default: 'Where style meets skincare' },
   logo: { type: String, default: '' },
   logoUrl: { type: String, default: '' },
-  email: { type: String, default: 'hello@zagebeauty.com' },
+  email: { type: String, default: 'hello@nsstore.com' },
   phone: { type: String, default: '+94 11 255 5000' },
   phone2: { type: String, default: '' },
   address: { type: String, default: '88 Fashion Avenue, Colombo 03, Sri Lanka' },
@@ -23,7 +23,7 @@ const settingsSchema = new mongoose.Schema({
     instagram: { type: String, default: '' },
     twitter: { type: String, default: '' },
   },
-  footerText: { type: String, default: '© 2026 Zage Fashion Corner. All rights reserved.' },
+  footerText: { type: String, default: '© 2026 NS Store. All rights reserved.' },
   heroProducts: [{
     name: { type: String },
     price: { type: Number },

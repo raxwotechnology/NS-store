@@ -574,7 +574,7 @@ const POSScreen = () => {
         hash: payData.hash,
         first_name: user?.name?.split(' ')[0] || 'Walk-in',
         last_name: user?.name?.split(' ').slice(1).join(' ') || 'Customer',
-        email: order.receiptEmail || user?.email || 'noreply@zage.lk',
+        email: order.receiptEmail || user?.email || 'noreply@nsstore.lk',
         phone: order.customerPhone || user?.phone || '0000000000',
         address: 'Walk-in Store',
         city: 'Colombo',

@@ -28,7 +28,7 @@ const AdminVouchers = () => {
   const settings = useSettingsStore((s) => s.settings);
 
   const printVoucher = (v) => {
-    const siteName = settings?.shopName || 'Zage Fashion Corner';
+    const siteName = settings?.shopName || 'NS Store';
     const logoUrl = settings?.logoUrl || settings?.logo || '';
     const qty = printQty[v._id] || 1;
     const discountText = v.type === 'percentage' ? `${v.value}% OFF` : `Rs. ${v.value} OFF`;

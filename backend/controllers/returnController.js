@@ -391,7 +391,7 @@ const exportCustomerReturnsPdf = async (req, res, next) => {
     res.setHeader('Content-Disposition', 'attachment; filename="customer-returns-report.pdf"');
     doc.pipe(res);
 
-    const companyName = settings?.shopName || 'Zage Fashion Corner';
+    const companyName = settings?.shopName || 'NS Store';
     const logoPath = settings?.logo ? path.join(__dirname, '..', settings.logo.replace(/^\//, '')) : null;
     if (logoPath) {
       try { doc.image(logoPath, 40, 34, { width: 50 }); } catch (err) { /* ignore missing logo */ }

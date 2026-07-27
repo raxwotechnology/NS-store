@@ -100,7 +100,7 @@ const AdminSettings = () => {
     }
   };
 
-  if (loading) return <DashboardLayout navItems={navItems} title="Zage Admin Panel"><div className="flex items-center justify-center h-64"><div className="w-10 h-10 border-4 border-primary-green border-t-transparent rounded-full animate-spin" /></div></DashboardLayout>;
+  if (loading) return <DashboardLayout navItems={navItems} title="NS Store Admin Panel"><div className="flex items-center justify-center h-64"><div className="w-10 h-10 border-4 border-primary-green border-t-transparent rounded-full animate-spin" /></div></DashboardLayout>;
 
   const tabs = [
     { key: 'general', label: 'General', icon: Globe },
@@ -113,7 +113,7 @@ const AdminSettings = () => {
   ];
 
   return (
-    <DashboardLayout navItems={navItems} title="Zage Admin Panel">
+    <DashboardLayout navItems={navItems} title="NS Store Admin Panel">
       <div>
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -189,7 +189,7 @@ const AdminSettings = () => {
                 </div>
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
-                <SettingsInputField label="Shop Name" value={settings.shopName} onChange={(v) => handleChange('shopName', v)} placeholder="Zage Fashion Corner" />
+                <SettingsInputField label="Shop Name" value={settings.shopName} onChange={(v) => handleChange('shopName', v)} placeholder="NS Store" />
                 <SettingsInputField label="Tagline" value={settings.tagline} onChange={(v) => handleChange('tagline', v)} placeholder="Where style meets skincare" />
               </div>
             </div>
@@ -197,7 +197,7 @@ const AdminSettings = () => {
             {/* Footer */}
             <div className="bg-white rounded-2xl border border-card-border p-6 shadow-sm">
               <h2 className="font-semibold text-dark-navy mb-4">Footer</h2>
-              <SettingsInputField label="Footer Text" value={settings.footerText} onChange={(v) => handleChange('footerText', v)} placeholder="© 2026 Zage Fashion Corner. All rights reserved." />
+              <SettingsInputField label="Footer Text" value={settings.footerText} onChange={(v) => handleChange('footerText', v)} placeholder="© 2026 NS Store. All rights reserved." />
             </div>
 
             {/* Hero Products */}
@@ -247,7 +247,7 @@ const AdminSettings = () => {
           <div className="bg-white rounded-2xl border border-card-border p-6 shadow-sm">
             <h2 className="font-semibold text-dark-navy mb-4 flex items-center gap-2"><Phone size={18} /> Contact Details</h2>
             <div className="grid sm:grid-cols-2 gap-4">
-              <SettingsInputField label="Email" value={settings.email} onChange={(v) => handleChange('email', v)} placeholder="hello@zagebeauty.com" />
+              <SettingsInputField label="Email" value={settings.email} onChange={(v) => handleChange('email', v)} placeholder="hello@nsstore.com" />
               <SettingsInputField label="Primary Phone" value={settings.phone} onChange={(v) => handleChange('phone', v)} placeholder="+94 11 255 5000" />
               <SettingsInputField label="Secondary Phone" value={settings.phone2} onChange={(v) => handleChange('phone2', v)} placeholder="Optional" />
               <SettingsInputField label="Country" value={settings.country} onChange={(v) => handleChange('country', v)} placeholder="Sri Lanka" />
@@ -481,9 +481,9 @@ const AdminSettings = () => {
           <div className="bg-white rounded-2xl border border-card-border p-6 shadow-sm">
             <h2 className="font-semibold text-dark-navy mb-4 flex items-center gap-2"><Palette size={18} /> Social Media Links</h2>
             <div className="space-y-4">
-              <SettingsInputField label="Facebook URL" value={settings.socialLinks?.facebook} onChange={(v) => handleSocialChange('facebook', v)} placeholder="https://facebook.com/zagebeautycorner" />
-              <SettingsInputField label="Instagram URL" value={settings.socialLinks?.instagram} onChange={(v) => handleSocialChange('instagram', v)} placeholder="https://instagram.com/zagebeautycorner" />
-              <SettingsInputField label="Twitter URL" value={settings.socialLinks?.twitter} onChange={(v) => handleSocialChange('twitter', v)} placeholder="https://x.com/zagebeauty" />
+              <SettingsInputField label="Facebook URL" value={settings.socialLinks?.facebook} onChange={(v) => handleSocialChange('facebook', v)} placeholder="https://facebook.com/nsstore" />
+              <SettingsInputField label="Instagram URL" value={settings.socialLinks?.instagram} onChange={(v) => handleSocialChange('instagram', v)} placeholder="https://instagram.com/nsstore" />
+              <SettingsInputField label="Twitter URL" value={settings.socialLinks?.twitter} onChange={(v) => handleSocialChange('twitter', v)} placeholder="https://x.com/nsstore" />
             </div>
           </div>
         )}

@@ -75,7 +75,7 @@ const AdminBarcodes = () => {
   };
 
   return (
-    <DashboardLayout navItems={navItems} title="Zage Admin Panel">
+    <DashboardLayout navItems={navItems} title="NS Store Admin Panel">
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
           <div>

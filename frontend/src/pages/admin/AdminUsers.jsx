@@ -320,7 +320,7 @@ const AdminUsers = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark-navy mb-1">Email *</label>
-                  <input required type="email" value={newForm.email} onChange={(e) => setNewForm({ ...newForm, email: e.target.value })} placeholder="alex@zage.com" className="w-full border border-card-border rounded-xl py-2.5 px-4 text-sm" />
+                  <input required type="email" value={newForm.email} onChange={(e) => setNewForm({ ...newForm, email: e.target.value })} placeholder="alex@nsstore.com" className="w-full border border-card-border rounded-xl py-2.5 px-4 text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark-navy mb-1">Phone Number</label>

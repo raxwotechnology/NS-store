@@ -406,7 +406,7 @@ const posCheckout = async (req, res, next) => {
           const randomPass = Math.random().toString(36).slice(-8);
           customerUser = await User.create({
             name: customerName || 'Walk-in Customer',
-            email: receiptEmail || `pos_cust_${Date.now()}@zage.com`,
+            email: receiptEmail || `pos_cust_${Date.now()}@nsstore.com`,
             phone: normalizedCustomerPhone || undefined,
             password: randomPass,
             role: 'customer',

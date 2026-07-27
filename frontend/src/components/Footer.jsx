@@ -9,7 +9,7 @@ const Footer = () => {
   const settings = useSettingsStore((s) => s.settings);
   const brandName = settings?.shopName || 'NS Store';
   const footerText = settings?.footerText || `© ${new Date().getFullYear()} NS Store. All rights reserved.`;
-  const brandEmail = settings?.email || 'support@zagebeauty.com';
+  const brandEmail = settings?.email || 'support@nsstore.com';
   const brandPhone = settings?.phone || '+94 11 255 5000';
   const brandAddress = settings?.address || '88 Fashion Avenue, Colombo 03';
   const brandLogoUrl = settings?.logoUrl;

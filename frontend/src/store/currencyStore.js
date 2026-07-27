@@ -2,25 +2,25 @@ import { create } from 'zustand';
 import { getExchangeRate } from '../services/api';
 
 const useCurrencyStore = create((set, get) => ({
-  currency: localStorage.getItem('zage_currency') || 'LKR',
-  exchangeRate: parseFloat(localStorage.getItem('zage_rate')) || 320,
-  lastFetched: parseInt(localStorage.getItem('zage_rate_ts')) || 0,
+  currency: localStorage.getItem('nsstore_currency') || 'LKR',
+  exchangeRate: parseFloat(localStorage.getItem('nsstore_rate')) || 320,
+  lastFetched: parseInt(localStorage.getItem('nsstore_rate_ts')) || 0,
 
   setCurrency: (currency) => {
-    localStorage.setItem('zage_currency', currency);
+    localStorage.setItem('nsstore_currency', currency);
     set({ currency });
   },
 
   toggleCurrency: () => {
     const newCurrency = get().currency === 'LKR' ? 'USD' : 'LKR';
-    localStorage.setItem('zage_currency', newCurrency);
+    localStorage.setItem('nsstore_currency', newCurrency);
     set({ currency: newCurrency });
   },
 
   setExchangeRate: (rate) => {
     const now = Date.now();
-    localStorage.setItem('zage_rate', rate.toString());
-    localStorage.setItem('zage_rate_ts', now.toString());
+    localStorage.setItem('nsstore_rate', rate.toString());
+    localStorage.setItem('nsstore_rate_ts', now.toString());
     set({ exchangeRate: rate, lastFetched: now });
   },
 

@@ -17,7 +17,7 @@ const BarcodeGenerator = () => {
   const [search, setSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(12);
-  const [shopName, setShopName] = useState('Zage Fashion Corner');
+  const [shopName, setShopName] = useState('NS Store');
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
@@ -113,7 +113,7 @@ const BarcodeGenerator = () => {
     return getEmployeeNavGroups(user?.role);
   };
 
-  const dashTitle = user?.role === 'admin' ? 'Zage Admin Panel' :
+  const dashTitle = user?.role === 'admin' ? 'NS Store Admin Panel' :
     user?.role === 'manager' ? 'Store Dashboard' : 'Employee Portal';
 
   return (

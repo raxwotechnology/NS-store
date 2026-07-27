@@ -80,7 +80,7 @@ const OrdersPage = () => {
   const downloadBill = (order) => {
     const lines = [
       '═══════════════════════════════════════',
-      '           ZAGE FASHION CORNER',
+      '           NS STORE',
       '            PURCHASE RECEIPT',
       '═══════════════════════════════════════',
       '',
@@ -114,7 +114,7 @@ const OrdersPage = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Zage_Receipt_${order._id.slice(-8).toUpperCase()}.txt`;
+    a.download = `NS_Store_Receipt_${order._id.slice(-8).toUpperCase()}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };

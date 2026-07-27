@@ -5,7 +5,7 @@ import useSettingsStore from '../../store/settingsStore';
 
 const InvoiceModal = ({ isOpen, onClose, order, onNewSale }) => {
   const settings = useSettingsStore((s) => s.settings);
-  const brandName = settings?.shopName || 'Zage Fashion Corner';
+  const brandName = settings?.shopName || 'NS Store';
   const brandAddress = settings?.address || '';
   const brandPhone = settings?.phone || '';
   const brandEmail = settings?.email || '';

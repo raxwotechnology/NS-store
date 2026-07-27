@@ -36,8 +36,8 @@ const generateBarcode = async (req, res, next) => {
     }
 
     // Generate barcode value if product doesn't have one
-    const barcodeValue = product.barcode || product.sku || `ZFC-${product._id.toString().slice(-8).toUpperCase()}`;
-    const shopName = settings?.shopName || 'Zage Fashion Corner';
+    const barcodeValue = product.barcode || product.sku || `NSS-${product._id.toString().slice(-8).toUpperCase()}`;
+    const shopName = settings?.shopName || 'NS Store';
 
     // Log the generation
     await BarcodeLog.create({

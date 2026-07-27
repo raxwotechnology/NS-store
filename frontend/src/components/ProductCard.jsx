@@ -17,7 +17,7 @@ const ProductCard = ({ product }) => {
   const mainImage = product.images?.[0] || 'https://via.placeholder.com/400x400?text=Beauty+Product';
   const hoverImage = product.images?.[1] || mainImage;
   const displayImage = hovered ? hoverImage : mainImage;
-  const storeName = product.storeId?.name || 'Zage Boutique';
+  const storeName = product.storeId?.name || 'NS Store Boutique';
   const categoryName = product.categoryId?.name || 'No category';
   const wishlisted = user && isInWishlist(product._id);
 
