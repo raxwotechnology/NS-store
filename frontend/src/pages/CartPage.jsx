@@ -84,7 +84,7 @@ const CartPage = () => {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20, height: 0 }}
                     transition={{ delay: i * 0.05, duration: 0.3 }}
-                    className="flex items-center gap-4 p-4 md:p-5 border-b border-card-border last:border-b-0"
+                    className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 md:p-5 border-b border-card-border last:border-b-0"
                   >
                     {/* Product Image */}
                     <Link to={`/product/${productId}`} className="flex-shrink-0">

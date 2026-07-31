@@ -221,23 +221,23 @@ const AdminExpenses = () => {
 
         {/* Summary Cards */}
         {summary && activeTab === 'expenses' && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-2xl border border-card-border p-5 shadow-sm">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div className="bg-white rounded-2xl border border-card-border p-3.5 sm:p-5 shadow-sm">
               <p className="text-xs text-muted-text">Total Expenses</p>
-              <p className="text-2xl font-bold text-dark-navy mt-1">Rs. {summary.totalExpenses?.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-dark-navy mt-1 truncate">Rs. {summary.totalExpenses?.toLocaleString()}</p>
               <p className="text-xs text-muted-text mt-1">{summary.totalCount} records</p>
             </div>
-            <div className="bg-white rounded-2xl border border-card-border p-5 shadow-sm">
+            <div className="bg-white rounded-2xl border border-card-border p-3.5 sm:p-5 shadow-sm">
               <p className="text-xs text-muted-text">Paid</p>
-              <p className="text-2xl font-bold text-emerald-600 mt-1">Rs. {summary.paidExpenses?.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-emerald-600 mt-1 truncate">Rs. {summary.paidExpenses?.toLocaleString()}</p>
             </div>
-            <div className="bg-white rounded-2xl border border-card-border p-5 shadow-sm">
+            <div className="bg-white rounded-2xl border border-card-border p-3.5 sm:p-5 shadow-sm">
               <p className="text-xs text-muted-text">Pending</p>
-              <p className="text-2xl font-bold text-amber-600 mt-1">Rs. {summary.pendingExpenses?.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-amber-600 mt-1 truncate">Rs. {summary.pendingExpenses?.toLocaleString()}</p>
             </div>
-            <div className="bg-white rounded-2xl border border-card-border p-5 shadow-sm">
+            <div className="bg-white rounded-2xl border border-card-border p-3.5 sm:p-5 shadow-sm">
               <p className="text-xs text-muted-text">Top Category</p>
-              <p className="text-lg font-bold text-dark-navy mt-1 truncate">
+              <p className="text-base sm:text-lg font-bold text-dark-navy mt-1 truncate">
                 {summary.byCategory ? Object.entries(summary.byCategory).sort((a, b) => b[1].total - a[1].total)[0]?.[0] || 'N/A' : 'N/A'}
               </p>
             </div>
@@ -336,7 +336,7 @@ const AdminExpenses = () => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-card-border flex items-center justify-between">
               <h2 className="text-lg font-bold text-dark-navy">{editingId ? `Edit ${activeTab === 'expenses' ? 'Expense' : 'Income'}` : `Add ${activeTab === 'expenses' ? 'Expense' : 'Income'}`}</h2>
               <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg hover:bg-gray-100"><X size={20} /></button>

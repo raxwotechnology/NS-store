@@ -103,7 +103,7 @@ const Home = () => {
             transition={{ duration: 0.7, delay: 0.2 }}
           >
             <div className="relative">
-              <div className="w-80 h-80 md:w-96 md:h-96 rounded-full bg-gradient-to-br from-rose-100 to-stone-200 flex items-center justify-center shadow-2xl overflow-hidden border-4 border-white">
+              <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full bg-gradient-to-br from-rose-100 to-stone-200 flex items-center justify-center shadow-2xl overflow-hidden border-4 border-white">
                 {settings?.heroImageUrl || settings?.heroImage ? (
                   <img src={settings?.heroImageUrl || settings?.heroImage} alt="Hero" className="w-full h-full object-cover" />
                 ) : (
@@ -113,7 +113,7 @@ const Home = () => {
               {/* Floating badges */}
               {settings?.showHeroBadges !== false && heroProducts[0] && heroProducts[0].name && (
                 <motion.div
-                  className="absolute -top-4 right-0 bg-white rounded-2xl shadow-lg p-3 flex items-center gap-2"
+                  className="hidden sm:flex absolute -top-4 right-0 bg-white rounded-2xl shadow-lg p-3 items-center gap-2"
                   animate={{ y: [0, -8, 0] }}
                   transition={{ duration: 3, repeat: Infinity }}
                 >
@@ -126,7 +126,7 @@ const Home = () => {
               )}
               {settings?.showHeroBadges !== false && heroProducts[1] && heroProducts[1].name && (
                 <motion.div
-                  className="absolute bottom-4 -left-4 bg-white rounded-2xl shadow-lg p-3 flex items-center gap-2"
+                  className="hidden sm:flex absolute bottom-4 -left-4 bg-white rounded-2xl shadow-lg p-3 items-center gap-2"
                   animate={{ y: [0, 8, 0] }}
                   transition={{ duration: 3.5, repeat: Infinity }}
                 >
@@ -292,7 +292,7 @@ const Home = () => {
               Unlock exclusive drops, beauty tutorials, personalized wishlists, and faster checkout from your phone.
             </p>
           </div>
-          <div className="z-10 flex gap-4">
+          <div className="z-10 flex flex-col sm:flex-row gap-3">
             <button className="bg-white text-zinc-900 font-semibold py-3 px-6 rounded-full hover:bg-rose-50 transition-colors">
               App Store
             </button>

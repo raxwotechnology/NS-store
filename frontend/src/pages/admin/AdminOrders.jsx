@@ -171,11 +171,11 @@ const AdminOrders = () => {
               {orders.length} total · <span className="text-amber-600">{pendingCount} pending approval</span> · Revenue: <span className="text-emerald-600 font-semibold">{formatPrice(convertPrice(totalRevenue))}</span>
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <select
               value={courierFilter}
               onChange={(e) => setCourierFilter(e.target.value)}
-              className="border border-card-border rounded-xl py-2.5 px-4 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-green"
+              className="w-full sm:w-auto border border-card-border rounded-xl py-2.5 px-4 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-green"
             >
               <option value="all">All Courier Services</option>
               {couriers.map((c) => (
@@ -185,7 +185,7 @@ const AdminOrders = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="border border-card-border rounded-xl py-2.5 px-4 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-green"
+              className="w-full sm:w-auto border border-card-border rounded-xl py-2.5 px-4 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-green"
             >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>

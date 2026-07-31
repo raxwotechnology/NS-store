@@ -190,81 +190,119 @@ const AdminNetProfitReport = () => {
           </div>
         ) : (
           <>
-            {/* KPI Executive Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Card 1: Operating Net Profit */}
-              <div className={`p-5 rounded-3xl border shadow-sm transition-all ${isProfitable ? 'bg-gradient-to-br from-emerald-500 to-teal-700 text-white border-emerald-600' : 'bg-gradient-to-br from-red-500 to-rose-700 text-white border-red-600'}`}>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider opacity-90">Net Profit (Operating)</p>
-                    <h3 className="text-3xl font-extrabold mt-2">
-                      Rs. {Math.abs(netProfit).toLocaleString()}
-                    </h3>
-                  </div>
-                  <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl">
-                    {isProfitable ? <TrendingUp size={24} /> : <TrendingDown size={24} />}
-                  </div>
-                </div>
-                <div className="mt-4 flex items-center justify-between text-xs border-t border-white/20 pt-3">
-                  <span>Net Profit Margin</span>
-                  <span className="font-bold">{netMargin}%</span>
-                </div>
-              </div>
-
-              {/* Card 2: True Net Profit (with COGS) */}
+            {/* KPI Executive Summary Cards: 6 Key Financial Metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {/* Card 1: Total Revenue */}
               <div className="bg-white p-5 rounded-3xl border border-card-border shadow-sm">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-xs text-muted-text uppercase font-semibold">Net Profit (After COGS)</p>
-                    <h3 className={`text-2xl font-bold mt-2 ${netProfitWithCogs >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                      Rs. {Math.abs(netProfitWithCogs).toLocaleString()}
-                    </h3>
-                  </div>
-                  <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600">
-                    <ShieldCheck size={20} />
-                  </div>
-                </div>
-                <div className="mt-4 text-xs text-muted-text border-t border-card-border pt-3 flex justify-between">
-                  <span>Gross Margin</span>
-                  <span className="font-bold text-dark-navy">{grossMargin}%</span>
-                </div>
-              </div>
-
-              {/* Card 3: Total Revenue */}
-              <div className="bg-white p-5 rounded-3xl border border-card-border shadow-sm">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-xs text-muted-text uppercase font-semibold">Total Revenue</p>
-                    <h3 className="text-2xl font-bold text-dark-navy mt-2">
+                    <p className="text-xs text-muted-text uppercase font-bold tracking-wider">Total Revenue</p>
+                    <h3 className="text-lg font-extrabold text-dark-navy mt-2">
                       Rs. {totalRevenue.toLocaleString()}
                     </h3>
                   </div>
-                  <div className="p-3 bg-blue-50 rounded-2xl text-blue-600">
-                    <ArrowUpRight size={20} />
+                  <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+                    <ArrowUpRight size={16} />
                   </div>
                 </div>
-                <div className="mt-4 text-xs text-muted-text border-t border-card-border pt-3 flex justify-between">
-                  <span>Other Income</span>
-                  <span className="font-bold text-purple-600">+ Rs. {totalAdditionalIncome.toLocaleString()}</span>
+                <div className="mt-3 text-[10px] text-muted-text border-t border-card-border pt-2 flex justify-between">
+                  <span>Sales Revenue</span>
+                  <span className="font-semibold text-blue-600">POS & Online</span>
                 </div>
               </div>
 
-              {/* Card 4: Total Expenses */}
+              {/* Card 2: Other Incomes */}
               <div className="bg-white p-5 rounded-3xl border border-card-border shadow-sm">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-xs text-muted-text uppercase font-semibold">Total Expenses</p>
-                    <h3 className="text-2xl font-bold text-red-600 mt-2">
+                    <p className="text-xs text-muted-text uppercase font-bold tracking-wider">Other Incomes</p>
+                    <h3 className="text-lg font-extrabold text-purple-600 mt-2">
+                      Rs. {totalAdditionalIncome.toLocaleString()}
+                    </h3>
+                  </div>
+                  <div className="p-2 bg-purple-50 rounded-xl text-purple-600">
+                    <DollarSign size={16} />
+                  </div>
+                </div>
+                <div className="mt-3 text-[10px] text-muted-text border-t border-card-border pt-2 flex justify-between">
+                  <span>Additional Incomes</span>
+                  <span className="font-semibold text-purple-600">Non-Sales</span>
+                </div>
+              </div>
+
+              {/* Card 3: Material Cost (COGS) */}
+              <div className="bg-white p-5 rounded-3xl border border-card-border shadow-sm">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs text-muted-text uppercase font-bold tracking-wider">Material Cost (COGS)</p>
+                    <h3 className="text-lg font-extrabold text-amber-600 mt-2">
+                      Rs. {cogs.toLocaleString()}
+                    </h3>
+                  </div>
+                  <div className="p-2 bg-amber-50 rounded-xl text-amber-600">
+                    <ShieldCheck size={16} />
+                  </div>
+                </div>
+                <div className="mt-3 text-[10px] text-muted-text border-t border-card-border pt-2 flex justify-between">
+                  <span>Product Cost</span>
+                  <span className="font-semibold text-amber-600">Cost Price</span>
+                </div>
+              </div>
+
+              {/* Card 4: Gross Profit */}
+              <div className="bg-white p-5 rounded-3xl border border-card-border shadow-sm">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs text-muted-text uppercase font-bold tracking-wider">Gross Profit</p>
+                    <h3 className="text-lg font-extrabold text-emerald-600 mt-2">
+                      Rs. {grossProfit.toLocaleString()}
+                    </h3>
+                  </div>
+                  <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
+                    <TrendingUp size={16} />
+                  </div>
+                </div>
+                <div className="mt-3 text-[10px] text-muted-text border-t border-card-border pt-2 flex justify-between">
+                  <span>Gross Margin</span>
+                  <span className="font-bold text-emerald-600">{grossMargin}%</span>
+                </div>
+              </div>
+
+              {/* Card 5: Expenses */}
+              <div className="bg-white p-5 rounded-3xl border border-card-border shadow-sm">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs text-muted-text uppercase font-bold tracking-wider">Expenses</p>
+                    <h3 className="text-lg font-extrabold text-red-600 mt-2">
                       Rs. {totalExpenses.toLocaleString()}
                     </h3>
                   </div>
-                  <div className="p-3 bg-red-50 rounded-2xl text-red-600">
-                    <ArrowDownRight size={20} />
+                  <div className="p-2 bg-red-50 rounded-xl text-red-600">
+                    <ArrowDownRight size={16} />
                   </div>
                 </div>
-                <div className="mt-4 text-xs text-muted-text border-t border-card-border pt-3 flex justify-between">
-                  <span>Product Cost (COGS)</span>
-                  <span className="font-bold text-amber-600">Rs. {cogs.toLocaleString()}</span>
+                <div className="mt-3 text-[10px] text-muted-text border-t border-card-border pt-2 flex justify-between">
+                  <span>Operating Expenses</span>
+                  <span className="font-semibold text-red-600">Bills & Utilities</span>
+                </div>
+              </div>
+
+              {/* Card 6: Net Profit */}
+              <div className={`p-5 rounded-3xl border shadow-sm transition-all ${netProfitWithCogs >= 0 ? 'bg-gradient-to-br from-emerald-500 to-teal-700 text-white border-emerald-600' : 'bg-gradient-to-br from-red-500 to-rose-700 text-white border-red-600'}`}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider opacity-95">Net Profit</p>
+                    <h3 className="text-lg font-black mt-2">
+                      Rs. {Math.abs(netProfitWithCogs).toLocaleString()}
+                    </h3>
+                  </div>
+                  <div className="p-2 bg-white/20 backdrop-blur-md rounded-xl">
+                    {netProfitWithCogs >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                  </div>
+                </div>
+                <div className="mt-3 text-[10px] flex items-center justify-between border-t border-white/20 pt-2">
+                  <span>Net Margin</span>
+                  <span className="font-extrabold">{totalRevenue > 0 ? ((netProfitWithCogs / totalRevenue) * 100).toFixed(1) : '0.0'}%</span>
                 </div>
               </div>
             </div>

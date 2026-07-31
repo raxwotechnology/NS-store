@@ -88,11 +88,11 @@ const Register = () => {
   return (
     <div className="min-h-[85vh] flex items-center justify-center bg-gradient-to-br from-rose-50 via-white to-stone-100 py-12">
       <motion.div
-        className="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-card-border w-full max-w-md mx-4"
+        className="bg-white p-5 sm:p-8 md:p-10 rounded-3xl shadow-xl border border-card-border w-full max-w-md mx-4"
         initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
       >
         <div className="text-center mb-8">
-          <Link to="/" className="text-3xl font-bold text-primary-green inline-flex items-center gap-2 mb-4">
+          <Link to="/" className="text-2xl sm:text-3xl font-bold text-primary-green inline-flex items-center gap-2 mb-4">
             {brandLogoUrl && (
               <img 
                 src={brandLogoUrl} 

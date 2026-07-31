@@ -285,7 +285,7 @@ const Shop = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-10">
+                <div className="flex flex-wrap justify-center gap-2 mt-10 px-4">
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}

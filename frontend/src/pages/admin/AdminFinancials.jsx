@@ -164,55 +164,55 @@ const AdminFinancials = () => {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-              <div className="bg-white rounded-2xl border border-card-border p-5 shadow-sm">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-8">
+              <div className="bg-white rounded-2xl border border-card-border p-3.5 sm:p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center"><ArrowUpRight size={16} className="text-white" /></div>
                 </div>
-                <p className="text-2xl font-bold text-dark-navy">Rs. {(d.totalRevenue || 0).toLocaleString()}</p>
+                <p className="text-xl sm:text-2xl font-bold text-dark-navy truncate">Rs. {(d.totalRevenue || 0).toLocaleString()}</p>
                 <p className="text-xs text-muted-text mt-1">Total Revenue</p>
               </div>
-              <div className="bg-white rounded-2xl border border-card-border p-5 shadow-sm">
+              <div className="bg-white rounded-2xl border border-card-border p-3.5 sm:p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-400 to-rose-500 flex items-center justify-center"><ArrowDownRight size={16} className="text-white" /></div>
                 </div>
-                <p className="text-2xl font-bold text-dark-navy">Rs. {(d.totalExpenses || 0).toLocaleString()}</p>
+                <p className="text-xl sm:text-2xl font-bold text-dark-navy truncate">Rs. {(d.totalExpenses || 0).toLocaleString()}</p>
                 <p className="text-xs text-muted-text mt-1">Total Expenses</p>
               </div>
-              <div className="bg-white rounded-2xl border border-card-border p-5 shadow-sm">
+              <div className="bg-white rounded-2xl border border-card-border p-3.5 sm:p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center"><DollarSign size={16} className="text-white" /></div>
                 </div>
-                <p className="text-2xl font-bold text-dark-navy">Rs. {(d.totalAdditionalIncome || 0).toLocaleString()}</p>
+                <p className="text-xl sm:text-2xl font-bold text-dark-navy truncate">Rs. {(d.totalAdditionalIncome || 0).toLocaleString()}</p>
                 <p className="text-xs text-muted-text mt-1">Other Income</p>
               </div>
-              <div className="bg-white rounded-2xl border border-card-border p-5 shadow-sm">
+              <div className="bg-white rounded-2xl border border-card-border p-3.5 sm:p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${profitPositive ? 'from-emerald-500 to-teal-600' : 'from-red-500 to-rose-600'} flex items-center justify-center`}>
                     {profitPositive ? <TrendingUp size={16} className="text-white" /> : <TrendingDown size={16} className="text-white" />}
                   </div>
                 </div>
-                <p className={`text-2xl font-bold ${profitPositive ? 'text-emerald-600' : 'text-red-600'}`}>Rs. {Math.abs(d.netProfit || 0).toLocaleString()}</p>
+                <p className={`text-xl sm:text-2xl font-bold truncate ${profitPositive ? 'text-emerald-600' : 'text-red-600'}`}>Rs. {Math.abs(d.netProfit || 0).toLocaleString()}</p>
                 <p className="text-xs text-muted-text mt-1">Net {profitPositive ? 'Profit' : 'Loss'}</p>
               </div>
-              <div className="bg-white rounded-2xl border border-card-border p-5 shadow-sm">
+              <div className="bg-white rounded-2xl border border-card-border p-3.5 sm:p-5 shadow-sm">
                 <p className="text-xs text-muted-text">Pending Bills</p>
-                <p className="text-2xl font-bold text-amber-600 mt-1">Rs. {(d.pendingExpenses || 0).toLocaleString()}</p>
+                <p className="text-xl sm:text-2xl font-bold text-amber-600 mt-1 truncate">Rs. {(d.pendingExpenses || 0).toLocaleString()}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              <div className="bg-white rounded-2xl border border-card-border p-5 shadow-sm">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-8">
+              <div className="bg-white rounded-2xl border border-card-border p-3.5 sm:p-5 shadow-sm">
                 <p className="text-xs text-muted-text">Items Sold</p>
-                <p className="text-2xl font-bold text-dark-navy mt-1">{(d.totalItemsSold || 0).toLocaleString()}</p>
+                <p className="text-xl sm:text-2xl font-bold text-dark-navy mt-1">{(d.totalItemsSold || 0).toLocaleString()}</p>
               </div>
-              <div className="bg-white rounded-2xl border border-card-border p-5 shadow-sm">
+              <div className="bg-white rounded-2xl border border-card-border p-3.5 sm:p-5 shadow-sm">
                 <p className="text-xs text-muted-text">POS Revenue</p>
-                <p className="text-2xl font-bold text-dark-navy mt-1">Rs. {(d.posRevenue || 0).toLocaleString()}</p>
+                <p className="text-xl sm:text-2xl font-bold text-dark-navy mt-1 truncate">Rs. {(d.posRevenue || 0).toLocaleString()}</p>
               </div>
-              <div className="bg-white rounded-2xl border border-card-border p-5 shadow-sm">
+              <div className="bg-white rounded-2xl border border-card-border p-3.5 sm:p-5 shadow-sm">
                 <p className="text-xs text-muted-text">Online Revenue</p>
-                <p className="text-2xl font-bold text-dark-navy mt-1">Rs. {(d.onlineRevenue || 0).toLocaleString()}</p>
+                <p className="text-xl sm:text-2xl font-bold text-dark-navy mt-1 truncate">Rs. {(d.onlineRevenue || 0).toLocaleString()}</p>
               </div>
             </div>
 

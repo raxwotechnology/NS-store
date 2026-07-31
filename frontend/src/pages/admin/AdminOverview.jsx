@@ -55,24 +55,24 @@ const AdminOverview = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-8">
           {cards.map((card) => (
-            <div key={card.label} className="bg-white rounded-2xl border border-card-border p-5 shadow-sm hover:shadow-md transition-all group">
+            <div key={card.label} className="bg-white rounded-2xl border border-card-border p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all group">
               <div className="flex items-center justify-between mb-3">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center shadow-lg ${card.shadow} group-hover:scale-110 transition-transform`}>
-                  <card.icon size={18} className="text-white" />
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center shadow-lg ${card.shadow} group-hover:scale-110 transition-transform`}>
+                  <card.icon size={16} className="text-white" />
                 </div>
                 <TrendingUp size={14} className="text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <p className="text-2xl font-bold text-dark-navy">{card.value}</p>
-              <p className="text-xs text-muted-text mt-1">{card.label}</p>
+              <p className="text-lg sm:text-2xl font-bold text-dark-navy truncate">{card.value}</p>
+              <p className="text-xs text-muted-text mt-1 truncate">{card.label}</p>
             </div>
           ))}
         </div>
 
         {/* Quick Links - Admin operations only (no customer-facing links) */}
         <h2 className="text-lg font-bold text-dark-navy mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {[
             { label: 'Manage Users', path: '/admin/users', icon: Users, color: 'text-violet-500 bg-violet-50 hover:bg-violet-100' },
             { label: 'Manage Stores', path: '/admin/stores', icon: Store, color: 'text-blue-500 bg-blue-50 hover:bg-blue-100' },

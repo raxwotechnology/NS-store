@@ -194,7 +194,7 @@ const AdminUsers = () => {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="border border-card-border rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary-green bg-white"
+            className="w-full sm:w-auto border border-card-border rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary-green bg-white"
           >
             <option value="all">All Roles</option>
             <option value="customer">Customer</option>
@@ -208,7 +208,7 @@ const AdminUsers = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-card-border rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary-green bg-white"
+            className="w-full sm:w-auto border border-card-border rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary-green bg-white"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -306,7 +306,7 @@ const AdminUsers = () => {
         {/* Add User Modal */}
         {showAddModal && (
           <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
-            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <div className="px-6 py-4 border-b border-card-border flex items-center justify-between">
                 <h2 className="text-lg font-bold text-dark-navy flex items-center gap-2">
                   <UserPlus className="text-primary-green" size={20} /> Register Admin/Staff
@@ -356,7 +356,7 @@ const AdminUsers = () => {
         {/* Permissions Modal */}
         {showPermModal && permUser && (
           <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setShowPermModal(false)}>
-            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <div className="px-6 py-4 border-b border-card-border flex items-center justify-between">
                 <h2 className="text-lg font-bold text-dark-navy flex items-center gap-2">
                   <ShieldAlert className="text-violet-600" size={20} /> Manage Permissions

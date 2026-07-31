@@ -374,7 +374,7 @@ const AdminProducts = () => {
                   <th className="text-left px-6 py-3 font-medium text-muted-text">Product</th>
                   <th className="text-left px-6 py-3 font-medium text-muted-text">Store</th>
                   <th className="text-left px-6 py-3 font-medium text-muted-text">Brand</th>
-                  <th className="text-left px-6 py-3 font-medium text-muted-text w-48">Price (LKR)</th>
+                  <th className="text-left px-6 py-3 font-medium text-muted-text min-w-[140px]">Price (LKR)</th>
                   <th className="text-left px-6 py-3 font-medium text-muted-text">Stock</th>
                   <th className="text-left px-6 py-3 font-medium text-muted-text">Status</th>
                   <th className="text-right px-6 py-3 font-medium text-muted-text">Actions</th>
@@ -457,6 +457,7 @@ const AdminProducts = () => {
                               {!product.priceRows || product.priceRows.length === 0 ? (
                                 <p className="text-xs text-gray-400 italic">No price rows yet. Stock will be tracked by price row when received via GRN.</p>
                               ) : (
+                                <div className="overflow-x-auto">
                                 <table className="w-full text-xs">
                                   <thead>
                                     <tr className="text-left text-gray-400 border-b border-gray-100">
@@ -489,6 +490,7 @@ const AdminProducts = () => {
                                     </tr>
                                   </tfoot>
                                 </table>
+                                </div>
                               )}
                             </div>
                           </td>
@@ -506,7 +508,7 @@ const AdminProducts = () => {
         {/* Excel Import Modal */}
         {showExcelModal && (
           <div className="fixed inset-0 bg-black/50 z-100 flex items-center justify-center p-4" onClick={() => setShowExcelModal(false)}>
-            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <div className="px-6 py-4 border-b border-card-border flex items-center justify-between bg-white rounded-t-2xl z-10">
                 <h2 className="text-lg font-bold text-dark-navy flex items-center gap-2">
                   <FileSpreadsheet className="text-emerald-600" size={20} /> Import Products Excel
