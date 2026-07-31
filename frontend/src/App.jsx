@@ -37,8 +37,8 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminVouchers from './pages/admin/AdminVouchers';
 import AdminReports from './pages/admin/AdminReports';
 import AdminSettings from './pages/admin/AdminSettings';
-import AdminExpenses from './pages/admin/AdminExpenses';
 import AdminFinancials from './pages/admin/AdminFinancials';
+import AdminNetProfitReport from './pages/admin/AdminNetProfitReport';
 import AdminInventory from './pages/admin/AdminInventory';
 import AdminPromotions from './pages/admin/AdminPromotions';
 import AdminProducts from './pages/admin/AdminProducts';
@@ -157,6 +157,7 @@ function App() {
           <Route path="/admin/settings" element={<ProtectedRoute roles={['admin']}><AdminSettings /></ProtectedRoute>} />
           <Route path="/admin/expenses" element={<ProtectedRoute roles={['admin']}><AdminExpenses /></ProtectedRoute>} />
           <Route path="/admin/financials" element={<ProtectedRoute roles={['admin']}><AdminFinancials /></ProtectedRoute>} />
+          <Route path="/admin/net-profit-report" element={<ProtectedRoute roles={['admin']}><AdminNetProfitReport /></ProtectedRoute>} />
           <Route path="/admin/payroll" element={<ProtectedRoute roles={['admin']}><AdminPayroll /></ProtectedRoute>} />
           <Route path="/admin/inventory" element={<ProtectedRoute roles={['admin']}><Navigate to="/admin/products" replace /></ProtectedRoute>} />
           <Route path="/admin/promotions" element={<ProtectedRoute roles={['admin']}><AdminPromotions /></ProtectedRoute>} />

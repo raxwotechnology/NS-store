@@ -64,10 +64,11 @@ const adminNavGroups = [
   {
     label: 'Financial Management',
     items: [
-      { path: '/admin/expenses',   label: 'Expenses & Income', icon: Wallet },
-      { path: '/admin/financials', label: 'Financials',        icon: DollarSign },
-      { path: '/admin/payroll',    label: 'Payroll',           icon: CreditCard },
-      { path: '/admin/overtime',   label: 'Overtime Pay',      icon: Clock },
+      { path: '/admin/expenses',          label: 'Expenses & Income', icon: Wallet },
+      { path: '/admin/financials',        label: 'Financials',        icon: DollarSign },
+      { path: '/admin/net-profit-report', label: 'Net Profit Report', icon: TrendingUp },
+      { path: '/admin/payroll',           label: 'Payroll',           icon: CreditCard },
+      { path: '/admin/overtime',          label: 'Overtime Pay',      icon: Clock },
     ],
   },
   {

@@ -2,6 +2,7 @@ const Order = require('../models/Order');
 const Expense = require('../models/Expense');
 const AdditionalIncome = require('../models/AdditionalIncome');
 const Store = require('../models/Store');
+const { calculateNetProfit } = require('../utils/financeHelper');
 
 // @desc    Get combined financial dashboard
 // @route   GET /api/finance/dashboard
@@ -26,28 +27,36 @@ const getFinancialDashboard = async (req, res, next) => {
     const orderFilter = { ...storeFilter, orderStatus: { $nin: ['cancelled'] } };
     if (Object.keys(dateFilter).length) orderFilter.createdAt = dateFilter;
     const orders = await Order.find(orderFilter);
-    const totalRevenue = orders.reduce((s, o) => s + (o.totalAmount || 0), 0);
-    const orderCount = orders.length;
-    const totalItemsSold = orders.reduce((s, o) => s + (o.items || []).reduce((x, it) => x + (it.quantity || 0), 0), 0);
-    const posRevenue = orders.filter((o) => o.isPosOrder).reduce((s, o) => s + (o.totalAmount || 0), 0);
-    const onlineRevenue = totalRevenue - posRevenue;
 
     // Expenses
     const expenseFilter = { ...storeFilter };
     if (Object.keys(dateFilter).length) expenseFilter.date = dateFilter;
     const expenses = await Expense.find(expenseFilter);
-    const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-    const paidExpenses = expenses.filter(e => e.status === 'Paid').reduce((s, e) => s + e.amount, 0);
-    const pendingExpenses = expenses.filter(e => e.status === 'Pending').reduce((s, e) => s + e.amount, 0);
 
     // Additional income
     const incomeFilter = { ...storeFilter };
     if (Object.keys(dateFilter).length) incomeFilter.date = dateFilter;
     const additionalIncomes = await AdditionalIncome.find(incomeFilter);
-    const totalAdditionalIncome = additionalIncomes.reduce((s, i) => s + i.amount, 0);
 
-    // Net profit
-    const netProfit = totalRevenue + totalAdditionalIncome - totalExpenses;
+    // Comprehensive Net Profit calculation using helper
+    const finSummary = calculateNetProfit(orders, expenses, additionalIncomes);
+
+    const {
+      totalRevenue,
+      cogs,
+      grossProfit,
+      totalExpenses,
+      paidExpenses,
+      pendingExpenses,
+      totalAdditionalIncome,
+      netProfit,
+      netProfitWithCogs,
+    } = finSummary;
+
+    const orderCount = finSummary.orderCount;
+    const totalItemsSold = orders.reduce((s, o) => s + (o.items || []).reduce((x, it) => x + (it.quantity || 0), 0), 0);
+    const posRevenue = orders.filter((o) => o.isPosOrder).reduce((s, o) => s + (o.totalAmount || 0), 0);
+    const onlineRevenue = totalRevenue - posRevenue;
 
     // Period series (daily/monthly/yearly). Defaults to monthly (last 12 points).
     const p = ['daily', 'monthly', 'yearly'].includes(String(period)) ? String(period) : 'monthly';
@@ -121,11 +130,14 @@ const getFinancialDashboard = async (req, res, next) => {
       totalRevenue,
       posRevenue,
       onlineRevenue,
+      cogs,
+      grossProfit,
       totalExpenses,
       paidExpenses,
       pendingExpenses,
       totalAdditionalIncome,
       netProfit,
+      netProfitWithCogs,
       orderCount,
       totalItemsSold,
       expenseCount: expenses.length,

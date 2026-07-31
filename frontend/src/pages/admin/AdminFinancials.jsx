@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { DollarSign, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Award, FolderOpen } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { getFinancialDashboard, getProfitReport, getStores } from '../../services/api';
@@ -106,16 +107,24 @@ const AdminFinancials = () => {
     <DashboardLayout navItems={navItems} title="Financials & Profit Reports">
       <div>
         {/* Tab selection */}
-        <div className="flex gap-2 mb-6">
-          {[
-            { id: 'overview', label: '📊 Financial Overview' },
-            { id: 'profit-report', label: '🏆 Brand & Category Profit Reports' }
-          ].map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${activeTab === tab.id ? 'bg-primary-green text-white shadow-md' : 'bg-white border border-card-border text-muted-text hover:bg-gray-50'}`}>
-              {tab.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div className="flex gap-2">
+            {[
+              { id: 'overview', label: '📊 Financial Overview' },
+              { id: 'profit-report', label: '🏆 Brand & Category Profit Reports' }
+            ].map(tab => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${activeTab === tab.id ? 'bg-primary-green text-white shadow-md' : 'bg-white border border-card-border text-muted-text hover:bg-gray-50'}`}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <Link
+            to="/admin/net-profit-report"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md hover:opacity-95 transition-all"
+          >
+            <TrendingUp size={16} /> 📈 Open Net Profit Analytics Report
+          </Link>
         </div>
 
         {activeTab === 'overview' && (
