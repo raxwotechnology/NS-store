@@ -37,6 +37,7 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminVouchers from './pages/admin/AdminVouchers';
 import AdminReports from './pages/admin/AdminReports';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminExpenses from './pages/admin/AdminExpenses';
 import AdminFinancials from './pages/admin/AdminFinancials';
 import AdminNetProfitReport from './pages/admin/AdminNetProfitReport';
 import AdminInventory from './pages/admin/AdminInventory';
